@@ -392,11 +392,14 @@ class ExactUpstreamTests(unittest.TestCase):
                     raise getattr(self.httpx, failure)('synthetic response lost', request=request)
                 client = self.client(handler)
                 original = client._call_rpc
-                with patch.object(self.Base, '_refresh_auth_tokens', side_effect=AssertionError('auth recovery')), \
-                        patch.object(self.Base, '_try_reload_or_headless_auth', side_effect=AssertionError('headless recovery')), \
-                        patch.object(self.Base, '_cdp_rpc_transport_enabled', side_effect=AssertionError('CDP transport')):
+                with patch.object(self.Base, '_refresh_auth_tokens', side_effect=AssertionError('auth recovery')) as refresh, \
+                        patch.object(self.Base, '_try_reload_or_headless_auth', side_effect=AssertionError('headless recovery')) as recover, \
+                        patch.object(self.Base, '_cdp_rpc_transport_enabled', side_effect=AssertionError('CDP transport')) as cdp:
                     with self.assertRaises(safe.AudioOutcomeUnknownError):
                         self.invoke(client)
+                refresh.assert_not_called()
+                recover.assert_not_called()
+                cdp.assert_not_called()
                 self.assertEqual(len(requests), 1)
                 self.assertEqual(client._call_rpc, original)
                 self.assertNotIn('_call_rpc', vars(client))
@@ -442,6 +445,41 @@ class ExactUpstreamTests(unittest.TestCase):
         with patch('time.sleep'), patch.object(self.Base, '_cdp_rpc_transport_enabled', return_value=False):
             self.assertEqual(client._call_rpc('wXbhsf', []), [1])
         self.assertEqual(len(requests), 3)
+
+    def test_retrying_http_post_wrapper_is_rejected_before_dispatch(self):
+        requests = []
+        def handler(request):
+            requests.append(request)
+            if len(requests) == 1:
+                return self.httpx.Response(503, text='synthetic lost commit response')
+            return self.httpx.Response(200, text=self.payload([['audio-fixture', None, 1, None, 1]]))
+        client = self.client(handler)
+        post = client._client.post
+        def retrying_post(*args, **kwargs):
+            response = post(*args, **kwargs)
+            try:
+                response.raise_for_status()
+                return response
+            except self.httpx.HTTPStatusError:
+                return post(*args, **kwargs)
+        client._client.post = retrying_post
+        with self.assertRaises(safe.UnsupportedClientError):
+            self.invoke(client)
+        self.assertEqual(requests, [])
+        self.assertNotIn('_call_rpc', vars(client))
+
+    def test_replaced_http_dispatch_and_transport_methods_are_rejected(self):
+        for name in ('post', 'request', 'send', '_send_handling_auth',
+                     '_send_handling_redirects', '_send_single_request', '_transport_for_url'):
+            with self.subTest(method=name):
+                client = self.client(lambda request: self.fail('network forbidden'))
+                setattr(client._client, name, lambda *args, **kwargs: self.fail('wrapper invoked'))
+                with self.assertRaises(safe.UnsupportedClientError):
+                    self.invoke(client)
+        client = self.client(lambda request: self.fail('network forbidden'))
+        client._client._transport.handle_request = lambda *args: self.fail('transport wrapper invoked')
+        with self.assertRaises(safe.UnsupportedClientError):
+            self.invoke(client)
 
     def test_retrying_transport_auth_and_hooks_are_rejected(self):
         for options in ({'transport': self.httpx.HTTPTransport(retries=1)},

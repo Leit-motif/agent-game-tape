@@ -94,18 +94,37 @@ def _verify_client(client):
         raise UnsupportedClientError('Unsupported NotebookLM audio RPC; no audio was sent.')
 
 
+def _original_bound_method(instance, owner, name):
+    method = getattr(instance, name, None)
+    return (isinstance(method, MethodType) and method.__self__ is instance
+            and method.__func__ is getattr(owner, name, None))
+
+
 def _verify_http_transport(http):
     # No custom retrying transports, subclasses, or redirect-following send loop.
     # MockTransport is explicitly accepted for network-free exact-upstream tests.
     import httpx
     if type(http) is not httpx.Client:
         raise UnsupportedClientError('Unsupported HTTP client; no audio was sent.')
+    client_module = importlib.import_module('httpx._client')
+    for name in ('post', 'request', 'build_request', 'send', '_set_timeout',
+                 '_build_request_auth', '_send_handling_auth', '_send_handling_redirects',
+                 '_send_single_request', '_transport_for_url'):
+        expected = getattr(httpx.Client, name, None)
+        if (not _original_bound_method(http, httpx.Client, name)
+                or Path(inspect.getsourcefile(expected) or '').resolve()
+                != Path(client_module.__file__).resolve()):
+            raise UnsupportedClientError('HTTP dispatch methods were replaced; no audio was sent.')
     transports = [http._transport, *http._mounts.values()]
     for transport in transports:
-        if transport is None or type(transport) is httpx.MockTransport:
+        if transport is None:
             continue
-        if (type(transport) is not httpx.HTTPTransport
-                or getattr(getattr(transport, '_pool', None), '_retries', None) != 0):
+        if type(transport) not in (httpx.HTTPTransport, httpx.MockTransport):
+            raise UnsupportedClientError('Unsupported HTTP transport; no audio was sent.')
+        if not _original_bound_method(transport, type(transport), 'handle_request'):
+            raise UnsupportedClientError('HTTP transport dispatch was replaced; no audio was sent.')
+        if (type(transport) is httpx.HTTPTransport
+                and getattr(getattr(transport, '_pool', None), '_retries', None) != 0):
             raise UnsupportedClientError('HTTP transport may replay requests; no audio was sent.')
     if http.auth is not None:
         raise UnsupportedClientError('HTTP authentication flow may replay requests; no audio was sent.')
