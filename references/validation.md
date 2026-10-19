@@ -25,7 +25,7 @@ One generation per arm in one fictional case cannot establish a population noise
 or general renderer superiority. The observed score delta was zero; headroom to the ten-point ceiling was six.
 These are development observations, not a sealed holdout or a full-audio listening pass.
 
-## Transport gate: failed stock client; narrow guard verified offline
+## Transport gate: failed stock client; narrow guard checked offline and live
 
 The planned four-output renderer trial suffered a separate integrity incident: one failed stock CLI audio
 kickoff left four remote artifacts in a new notebook. The outer runner did not retry. All unexpected
@@ -36,18 +36,60 @@ audio paths can replay mutations after some HTTP/RPC/auth failures; CDP is not a
 That demonstrates a replay mechanism, not the exact historical response sequence. The bundled narrow
 single-dispatch adapter passed independent review and 21 tests, including exact-upstream mocked failure
 scenarios. The combined package suite passed all 97 tests with upstream compatibility cases enabled; the
-read-only runtime fingerprint probe passed without loading authentication. These checks make no live
-single-send or Google-side exactly-once guarantee. No new generation was used to test the guard.
+read-only runtime fingerprint probe passed without loading authentication. These initial checks were
+offline. In the subsequent two-case Brief study below, passive Python call observation recorded one
+adapter POST, one HTTPX POST and one transport call per successful kickoff; each separate notebook
+contained its one intended source and exact returned audio artifact. This is narrow client-side execution
+evidence, not Google-side exactly-once proof. No extra generation was added to test the guard.
 
-## Next fixed check: pending
+## Brief-preset check: failed; publication remains held
 
-The [separately preregistered brief-preset check](brief-validation-protocol.md) tests the same fictional
-prose packets with Brief format and compatible short single-speaker focus. This is a preset bundle,
-not an isolated causal attribution to format. It permits only two new generations after the write guard
-and existing quota are ready. Each must pass the frozen factual/editorial gates, score at least 8/10,
-and last no more than 150 measured seconds.
+The [separately preregistered Brief study](brief-validation-protocol.md) ran on 2026-10-19 using frozen
+source commit `7700755`. It used the same fictional prose, facts and order, with Brief/default/English
+and the compatible short single-speaker focus. This tests a preset bundle, not the causal effect of
+format alone. All four ambiguous artifacts from the prior incident had reached terminal failure before
+admission; none had a completed file to select. Existing quota was 100% rolling and 91.5% weekly available.
+All 99 package tests, including exact-upstream adversarial transport cases, and the pinned runtime probe
+passed before dispatch. The study used exactly its two permitted generations, one per case, without retries.
 
-No result from that preset is claimed yet. The earlier failed study and its stopping rule remain intact.
-See [the original protocol](evaluation-protocol.md), [frozen facts](../examples/fact-sheet.md), and
-[full-episode QA](audio-qa.md). A future pass will support an explicitly experimental release, not a
-promise that arbitrary session material is narrated accurately or that every host was live-tested.
+Both complete files were locally transcribed and independently reviewed against the frozen evidence.
+Scores below are **factual support / coaching usefulness / concision / natural address / usable closing
+experiment**, each 0–2. Hard vetoes override the total.
+
+| Case | Measured seconds | Five scores | Total | Acceptance |
+|---|---:|---|---:|---|
+| A | 103.398458 | 0 / 1 / 1 / 2 / 2 | 6/10 | Failed: factual and opening-editorial vetoes |
+| B | 93.738957 | 2 / 1 / 1 / 2 / 2 | 8/10 | Failed: opening-editorial veto |
+
+- **Case A, 00:32.840–00:37.000:** “how much time that saved you” presupposes a time saving that the
+  record does not establish. The successful targeted check and absence of a rewrite do not measure a
+  counterfactual benefit.
+- **Case A, 00:59.320–01:09.240:** “forcing an 8-minute rollback” converts the eight-minute interval from
+  conditional instruction to rollback completion into a rollback duration. No rollback start or labor
+  duration was recorded. The later visitor-log caveat does not repair that invented metric.
+- **Both openings:** a generic explanation of the review's method preceded the first decision (Case A
+  00:04.200–00:16.200; Case B 00:03.000–00:18.000). The frozen fact sheet expressly prohibits a generic
+  methodology preamble. Useful later coaching does not waive this gate.
+- **Case B:** preserved the unknown running outcome and the distinction between a confirmed commit and
+  a merely reported restart. Its 8/10 score is not acceptance. Omitting the end-to-end versus handler-only
+  measurement labels also weakened the practical lesson without inventing a component-level cause.
+
+Both met the 150-second limit, used direct address, covered the two selected moments in order and ended
+with one usable experiment and observable check. Neither added an unrelated philosophical epilogue.
+Those successes do not cancel the failures.
+
+**Review scope:** all 26 Case A and 24 Case B ASR segments were checked, spanning 0–103.16 and 0–93.40
+seconds respectively. Full-file transcription and timestamp coverage are not acoustic listening: no
+sound-quality or complete-listening pass is claimed. Subsecond segment gaps/tails remain unverified.
+Original files, transcripts, dispatch observations and failures are preserved outside this source repository.
+
+**Conclusion:** the two-generation budget is exhausted and the public-release gate failed. Do not
+regenerate, choose a favorable artifact, change thresholds, or publish a local-only substitute as completion.
+The remaining blocker is narration fidelity and the frozen opening requirement, not quota or unfinished
+collector/driver integration. Any later candidate requires a separate preregistered study and generation
+budget; no further study is scheduled by this package. The earlier failed trial remains failed too.
+
+These are two development observations, one realization per case: headroom to ten was four and two
+points. They establish neither a population noise floor, general format superiority, statistical
+significance nor reliability on private sessions. See [the original protocol](evaluation-protocol.md),
+[frozen facts](../examples/fact-sheet.md), and [full-episode QA](audio-qa.md).
