@@ -1,0 +1,9 @@
+{
+  "R1": "Make the intended outcome and the next observable check concrete before expensive work.",
+  "R2": "Test assumptions with the smallest relevant experiment before committing to a large build.",
+  "R3": "Judge success on the surface the person actually uses, not on an agent's completion claim.",
+  "R4": "Preserve the latest explicit human intent; a missing note is not a missing intention.",
+  "R5": "Match delegation and scope to the task; use explicit handoffs and verify returned artifacts.",
+  "R6": "Separate observed outcomes, assistant reports, unknowns, and hypothetical alternatives.",
+  "R7": "Turn a recurring failure into a checkable procedure, then test whether the change helps."
+}
