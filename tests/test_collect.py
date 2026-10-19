@@ -18,8 +18,8 @@ SPEC = importlib.util.spec_from_file_location(
 collector = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(collector)
 FIXTURES = Path(__file__).parent / "fixtures"
-START = datetime(2026, 10, 19, tzinfo=timezone.utc)
-END = datetime(2026, 10, 20, tzinfo=timezone.utc)
+START = datetime(2030, 10, 19, tzinfo=timezone.utc)
+END = datetime(2030, 10, 20, tzinfo=timezone.utc)
 
 
 class CollectTests(unittest.TestCase):
@@ -37,7 +37,7 @@ class CollectTests(unittest.TestCase):
     def collect_fixture(self, harness, name):
         return collector.collect([(harness, FIXTURES / name)], START, END)
 
-    def claude_message(self, text="Synthetic prompt.", timestamp="2026-10-19T10:00:00Z"):
+    def claude_message(self, text="Synthetic prompt.", timestamp="2030-10-19T10:00:00Z"):
         return {"type": "user", "timestamp": timestamp, "message": {"role": "user", "content": text}}
 
     def test_claude_preserves_real_human_markdown_and_instructions(self):
@@ -63,16 +63,16 @@ class CollectTests(unittest.TestCase):
 
     def test_injected_wrappers_do_not_drop_adjacent_real_prompt(self):
         path = self.write_records("mixed.jsonl", [
-            {"type": "user", "timestamp": "2026-10-19T10:00:00Z", "message": {
+            {"type": "user", "timestamp": "2030-10-19T10:00:00Z", "message": {
                 "role": "user", "content": [
                     {"type": "text", "text": "<system-reminder>Generated context.</system-reminder>"},
                     {"type": "text", "text": "## My instructions\nUse a half-open boundary."},
                 ],
             }},
-            {"type": "user", "timestamp": "2026-10-19T10:01:00Z", "message": {
+            {"type": "user", "timestamp": "2030-10-19T10:01:00Z", "message": {
                 "role": "user", "content": "Please keep this sentence.\n\n<system-reminder>Generated context.</system-reminder>",
             }},
-            {"type": "user", "timestamp": "2026-10-19T10:02:00Z", "message": {
+            {"type": "user", "timestamp": "2030-10-19T10:02:00Z", "message": {
                 "role": "user", "content": "Caveat: do not remove genuine user caveats.",
             }},
         ])
@@ -105,7 +105,7 @@ class CollectTests(unittest.TestCase):
             with self.subTest(metadata=metadata):
                 path = self.write_records("automated.jsonl", [
                     {"type": "session_meta", "payload": metadata},
-                    {"type": "response_item", "timestamp": "2026-10-19T10:00:00Z", "payload": {
+                    {"type": "response_item", "timestamp": "2030-10-19T10:00:00Z", "payload": {
                         "type": "message", "role": "user", "content": "An automated invocation.",
                     }},
                 ])
@@ -121,7 +121,7 @@ class CollectTests(unittest.TestCase):
             {"teamName": "synthetic-team"},
         ]
         path = self.write_records("claude-auto.jsonl", [
-            {"type": "user", "timestamp": "2026-10-19T10:00:00Z", "message": {
+            {"type": "user", "timestamp": "2030-10-19T10:00:00Z", "message": {
                 "role": "user", "content": "Not a verified human instruction.",
             }, **metadata} for metadata in metadata_rows
         ])
@@ -165,21 +165,21 @@ class CollectTests(unittest.TestCase):
 
     def test_utc_instant_sorting_and_half_open_boundaries(self):
         path = self.write_records("offsets.jsonl", [
-            self.claude_message("end excluded", "2026-10-20T00:00:00Z"),
-            self.claude_message("start included", "2026-10-19T02:00:00+02:00"),
-            self.claude_message("earlier instant", "2026-10-19T12:00:00+02:00"),
-            self.claude_message("later instant", "2026-10-19T10:30:00Z"),
-            self.claude_message("before start", "2026-10-18T23:59:59.999999Z"),
-            self.claude_message("numeric seconds", 1792414800),
-            self.claude_message("numeric millis", 1792418400000),
+            self.claude_message("end excluded", "2030-10-20T00:00:00Z"),
+            self.claude_message("start included", "2030-10-19T02:00:00+02:00"),
+            self.claude_message("earlier instant", "2030-10-19T12:00:00+02:00"),
+            self.claude_message("later instant", "2030-10-19T10:30:00Z"),
+            self.claude_message("before start", "2030-10-18T23:59:59.999999Z"),
+            self.claude_message("numeric seconds", int(START.replace(hour=13).timestamp())),
+            self.claude_message("numeric millis", int(START.replace(hour=14).timestamp() * 1000)),
         ])
         events, coverage = collector.collect([("claude-code", path)], START, END)
         self.assertEqual([event["text"] for event in events], [
             "start included", "earlier instant", "later instant", "numeric seconds", "numeric millis",
         ])
-        self.assertEqual(events[0]["timestamp"], "2026-10-19T00:00:00+00:00")
-        self.assertEqual(events[-2]["timestamp"], "2026-10-19T13:00:00+00:00")
-        self.assertEqual(events[-1]["timestamp"], "2026-10-19T14:00:00+00:00")
+        self.assertEqual(events[0]["timestamp"], "2030-10-19T00:00:00+00:00")
+        self.assertEqual(events[-2]["timestamp"], "2030-10-19T13:00:00+00:00")
+        self.assertEqual(events[-1]["timestamp"], "2030-10-19T14:00:00+00:00")
         self.assertEqual(coverage[0]["outside_window_events"], 2)
 
     def test_daylight_saving_fold_uses_actual_instants(self):
@@ -187,19 +187,19 @@ class CollectTests(unittest.TestCase):
             zone = ZoneInfo("America/New_York")
         except ZoneInfoNotFoundError:
             self.skipTest("System IANA timezone data unavailable")
-        start = datetime(2026, 11, 1, 1, 0, tzinfo=zone, fold=1)
-        end = datetime(2026, 11, 1, 1, 30, tzinfo=zone, fold=1)
+        start = datetime(2030, 11, 3, 1, 0, tzinfo=zone, fold=1)
+        end = datetime(2030, 11, 3, 1, 30, tzinfo=zone, fold=1)
         path = self.write_records("fold.jsonl", [
-            self.claude_message("first 1:15 is outside", "2026-11-01T01:15:00-04:00"),
-            self.claude_message("second 1:15 is inside", "2026-11-01T01:15:00-05:00"),
-            self.claude_message("second 1:30 is excluded", "2026-11-01T01:30:00-05:00"),
+            self.claude_message("first 1:15 is outside", "2030-11-03T01:15:00-04:00"),
+            self.claude_message("second 1:15 is inside", "2030-11-03T01:15:00-05:00"),
+            self.claude_message("second 1:30 is excluded", "2030-11-03T01:30:00-05:00"),
         ])
         events, _ = collector.collect([("claude-code", path)], start, end)
         self.assertEqual([event["text"] for event in events], ["second 1:15 is inside"])
-        self.assertEqual(events[0]["timestamp"], "2026-11-01T06:15:00+00:00")
+        self.assertEqual(events[0]["timestamp"], "2030-11-03T06:15:00+00:00")
 
     def test_invalid_or_missing_timestamps_are_reported(self):
-        invalid_times = [None, "", "not a date", "2026-10-19T10:00:00", True, {}, 10**30]
+        invalid_times = [None, "", "not a date", "2030-10-19T10:00:00", True, {}, 10**30]
         path = self.write_records("missing-times.jsonl", [
             self.claude_message("Timestamp unavailable.", raw) for raw in invalid_times
         ])
@@ -209,7 +209,7 @@ class CollectTests(unittest.TestCase):
         self.assertEqual(coverage[0]["status"], "incomplete")
 
     def test_invalid_windows_and_harness_fail_explicitly(self):
-        for start, end in ((datetime(2026, 10, 19), END), (START, START), (END, START)):
+        for start, end in ((datetime(2030, 10, 19), END), (START, START), (END, START)):
             with self.subTest(start=start, end=end), self.assertRaises(ValueError):
                 collector.collect([], start, end)
         with self.assertRaises(ValueError):
@@ -229,7 +229,7 @@ class CollectTests(unittest.TestCase):
     def test_multi_block_event_ids_do_not_depend_on_selected_window(self):
         all_events, _ = self.collect_fixture("claude-code", "claude.jsonl")
         subset, _ = collector.collect([("claude-code", FIXTURES / "claude.jsonl")],
-                                      datetime(2026, 10, 19, 8, 2, tzinfo=timezone.utc), END)
+                                      datetime(2030, 10, 19, 8, 2, tzinfo=timezone.utc), END)
         self.assertEqual([event["id"] for event in subset], [event["id"] for event in all_events if event["line"] >= 3])
 
     def test_malformed_lines_and_unknown_schemas_cannot_look_like_success(self):
@@ -355,7 +355,7 @@ class CollectTests(unittest.TestCase):
     def test_known_delegated_paths_and_openclaw_headers_are_excluded(self):
         paths = [self.write_records(name, [self.claude_message("Delegated task.")]) for name in ("agent-worker.jsonl", "subagents/worker.jsonl")]
         openclaw = self.write_records("openclaw-child.jsonl", [
-            {"type": "message", "timestamp": "2026-10-19T10:00:00Z", "message": {"role": "user", "content": "Late-header delegated task."}},
+            {"type": "message", "timestamp": "2030-10-19T10:00:00Z", "message": {"role": "user", "content": "Late-header delegated task."}},
             {"type": "session", "sessionKey": "agent:main:subagent:synthetic"},
         ])
         events, coverage = collector.collect([*(('claude-code', path) for path in paths), ("openclaw", openclaw)], START, END)
@@ -365,7 +365,7 @@ class CollectTests(unittest.TestCase):
     def test_non_subagent_codex_source_dict_is_not_blanket_excluded(self):
         path = self.write_records("codex-source.jsonl", [
             {"type": "session_meta", "payload": {"source": {"cli": "synthetic"}}},
-            {"type": "response_item", "timestamp": "2026-10-19T10:00:00Z", "payload": {"type": "message", "role": "user", "content": "A normal prompt."}},
+            {"type": "response_item", "timestamp": "2030-10-19T10:00:00Z", "payload": {"type": "message", "role": "user", "content": "A normal prompt."}},
         ])
         events, _ = collector.collect([("codex", path)], START, END)
         self.assertEqual([event["text"] for event in events], ["A normal prompt."])
@@ -406,7 +406,7 @@ class CollectTests(unittest.TestCase):
 
     def test_record_cap_fails_closed_when_late_provenance_cannot_be_scanned(self):
         path = self.write_records("late-meta.jsonl", [
-            {"type": "response_item", "timestamp": "2026-10-19T10:00:00Z", "payload": {"type": "message", "role": "user", "content": "Do not misattribute this."}},
+            {"type": "response_item", "timestamp": "2030-10-19T10:00:00Z", "payload": {"type": "message", "role": "user", "content": "Do not misattribute this."}},
             {"type": "session_meta", "payload": {"source": {"subagent": "synthetic"}}},
         ])
         with patch.object(collector, "MAX_RECORDS_PER_FILE", 1):
@@ -463,7 +463,7 @@ class CollectTests(unittest.TestCase):
     def test_utf8_bom_does_not_hide_delegation_metadata(self):
         path = self.write_records("bom.jsonl", [
             {"type": "session_meta", "payload": {"source": {"subagent": "synthetic"}}},
-            {"type": "response_item", "timestamp": "2026-10-19T10:00:00Z", "payload": {
+            {"type": "response_item", "timestamp": "2030-10-19T10:00:00Z", "payload": {
                 "type": "message", "role": "user", "content": "Delegated prompt after a UTF-8 BOM.",
             }},
         ])
@@ -515,7 +515,7 @@ class CollectTests(unittest.TestCase):
             with self.subTest(mode=mode):
                 path = self.write_records("unknown-mode.jsonl", [
                     {"type": "session_meta", "payload": {"source": "cli", "history_mode": mode}},
-                    {"type": "response_item", "timestamp": "2026-10-19T10:00:00Z", "payload": {"type": "message", "role": "user", "content": "Cannot infer the authoritative stream."}},
+                    {"type": "response_item", "timestamp": "2030-10-19T10:00:00Z", "payload": {"type": "message", "role": "user", "content": "Cannot infer the authoritative stream."}},
                 ])
                 events, coverage = collector.collect([("codex", path)], START, END)
                 self.assertEqual(events, [])
@@ -537,10 +537,10 @@ class CollectTests(unittest.TestCase):
     def test_longer_than_8mib_session_and_large_tool_line_work_with_defaults(self):
         path = self.write_records("ordinary-long.jsonl", [
             self.claude_message("Keep the important steering prompt."),
-            {"type": "user", "timestamp": "2026-10-19T10:01:00Z", "message": {"role": "user", "content": [
+            {"type": "user", "timestamp": "2030-10-19T10:01:00Z", "message": {"role": "user", "content": [
                 {"type": "tool_result", "content": "x" * (9 * 1024 * 1024)},
             ]}},
-            {"type": "assistant", "timestamp": "2026-10-19T10:02:00Z", "message": {"role": "assistant", "content": "Verification after a large tool result."}},
+            {"type": "assistant", "timestamp": "2030-10-19T10:02:00Z", "message": {"role": "assistant", "content": "Verification after a large tool result."}},
         ])
         events, coverage = collector.collect([("claude-code", path)], START, END)
         self.assertEqual([event["role"] for event in events], ["human", "tool", "assistant"])
@@ -569,7 +569,7 @@ class CollectTests(unittest.TestCase):
         os.utime(recent, (1792404000, 1792404000))
         codex = self.write_records("codex/recent.jsonl", [
             {"type": "session_meta", "payload": {"source": "cli", "history_mode": "legacy"}},
-            {"type": "response_item", "timestamp": "2026-10-19T11:00:00Z", "payload": {"type": "message", "role": "user", "content": "Recent Codex prompt."}},
+            {"type": "response_item", "timestamp": "2030-10-19T11:00:00Z", "payload": {"type": "message", "role": "user", "content": "Recent Codex prompt."}},
         ])
         events, coverage = collector.collect([("claude-code", recent.parent), ("codex", codex.parent)], START, END,
                                              limits={"max_files": 2})
@@ -587,7 +587,7 @@ class CollectTests(unittest.TestCase):
         ]
         path = self.write_records("typed-items.jsonl", [
             {"type": "session_meta", "payload": {"source": "cli", "history_mode": "paginated"}},
-            *({"type": "event_msg", "timestamp": "2026-10-19T10:00:00Z", "payload": {"type": "item_completed", "item": item}} for item in items),
+            *({"type": "event_msg", "timestamp": "2030-10-19T10:00:00Z", "payload": {"type": "item_completed", "item": item}} for item in items),
         ])
         events, coverage = collector.collect([("codex", path)], START, END)
         self.assertEqual([event["role"] for event in events], ["assistant", "tool_call", "tool", "tool_call", "tool"])
@@ -599,8 +599,8 @@ class CollectTests(unittest.TestCase):
     def test_unknown_paginated_items_are_reported_and_bad_items_do_not_crash(self):
         path = self.write_records("unknown-items.jsonl", [
             {"type": "session_meta", "payload": {"source": "cli", "history_mode": "paginated"}},
-            {"type": "event_msg", "timestamp": "2026-10-19T10:00:00Z", "payload": {"type": "item_completed", "item": {"type": "FutureItem", "id": "future-1"}}},
-            {"type": "event_msg", "timestamp": "2026-10-19T10:01:00Z", "payload": {"type": "item_completed", "item": {"type": [], "id": "bad-1"}}},
+            {"type": "event_msg", "timestamp": "2030-10-19T10:00:00Z", "payload": {"type": "item_completed", "item": {"type": "FutureItem", "id": "future-1"}}},
+            {"type": "event_msg", "timestamp": "2030-10-19T10:01:00Z", "payload": {"type": "item_completed", "item": {"type": [], "id": "bad-1"}}},
         ])
         events, coverage = collector.collect([("codex", path)], START, END)
         self.assertEqual(events, [])
@@ -611,15 +611,15 @@ class CollectTests(unittest.TestCase):
     def test_codex_inherited_context_and_compaction_are_not_original_messages(self):
         path = self.write_records("inherited.jsonl", [
             {"type": "session_meta", "payload": {"source": "cli", "history_mode": "legacy"}},
-            {"type": "response_item", "timestamp": "2026-10-19T10:00:00Z", "metadata": {"inherited_user_message": True}, "payload": {"type": "message", "role": "user", "content": "Copied parent context."}},
-            {"type": "response_item", "timestamp": "2026-10-19T10:01:00Z", "metadata": {"compaction_output": True}, "payload": {"type": "message", "role": "assistant", "content": "A generated compaction summary."}},
+            {"type": "response_item", "timestamp": "2030-10-19T10:00:00Z", "metadata": {"inherited_user_message": True}, "payload": {"type": "message", "role": "user", "content": "Copied parent context."}},
+            {"type": "response_item", "timestamp": "2030-10-19T10:01:00Z", "metadata": {"compaction_output": True}, "payload": {"type": "message", "role": "assistant", "content": "A generated compaction summary."}},
         ])
         events, coverage = collector.collect([("codex", path)], START, END)
         self.assertEqual(events, [])
         self.assertEqual(coverage[0]["unsupported_records"], 0)
         damaged = self.write_records("damaged-header.jsonl", [
             {"type": "session_meta", "payload": []},
-            {"type": "response_item", "timestamp": "2026-10-19T10:00:00Z", "payload": {"type": "message", "role": "user", "content": "Cannot safely select a stream."}},
+            {"type": "response_item", "timestamp": "2030-10-19T10:00:00Z", "payload": {"type": "message", "role": "user", "content": "Cannot safely select a stream."}},
         ])
         events, coverage = collector.collect([("codex", damaged)], START, END)
         self.assertEqual(events, [])
@@ -627,12 +627,12 @@ class CollectTests(unittest.TestCase):
         self.assertEqual(coverage[0]["malformed_records"], 1)
 
     def test_completed_item_timestamp_fallback_and_conflicting_modes(self):
-        item_row = {"type": "event_msg", "payload": {"type": "item_completed", "completed_at_ms": 1792404000000,
+        item_row = {"type": "event_msg", "payload": {"type": "item_completed", "completed_at_ms": int(START.replace(hour=10).timestamp() * 1000),
                     "item": {"type": "AgentMessage", "id": "message-1", "content": [{"type": "Text", "text": "Timestamp fallback."}]}}}
         header = {"type": "session_meta", "payload": {"source": "cli", "history_mode": "paginated"}}
         path = self.write_records("timestamp-fallback.jsonl", [header, item_row])
         events, _ = collector.collect([("codex", path)], START, END)
-        self.assertEqual(events[0]["timestamp"], "2026-10-19T10:00:00+00:00")
+        self.assertEqual(events[0]["timestamp"], "2030-10-19T10:00:00+00:00")
         conflicting = self.write_records("conflicting.jsonl", [header, item_row,
                         {"type": "session_meta", "payload": {"source": "cli", "history_mode": "legacy"}}])
         events, coverage = collector.collect([("codex", conflicting)], START, END)

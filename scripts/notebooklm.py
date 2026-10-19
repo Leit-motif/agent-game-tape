@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import contextlib
 import hashlib
 import json
 import os
@@ -13,7 +12,7 @@ import sys
 import time
 from pathlib import Path
 
-from game_tape import fingerprint, load, save, validate
+from game_tape import fingerprint, load, run_lock as lock, save, validate
 
 
 def rows(value, key):
@@ -27,8 +26,25 @@ def rows(value, key):
     return []
 
 
+def python_for_cli(executable):
+    resolved = Path(executable).resolve()
+    for name in ('python', 'python3'):
+        candidate = resolved.parent / name
+        if candidate.is_file() and os.access(candidate, os.X_OK):
+            return str(candidate)
+    try:
+        with resolved.open('rb') as handle:
+            first = handle.readline(4096).decode('utf-8', errors='replace').strip()
+        interpreter = first[2:] if first.startswith('#!') else ''
+        if interpreter.startswith('/') and 'python' in Path(interpreter).name.lower() and Path(interpreter).is_file():
+            return interpreter
+    except OSError:
+        pass
+    return None
+
+
 class Publisher:
-    def __init__(self, folder, executable):
+    def __init__(self, folder, executable, client_python=None, environment_entrypoint=None):
         self.folder = Path(folder).expanduser().resolve()
         self.manifest = load(self.folder / 'manifest.json')
         self.state_path = self.folder / 'notebooklm-state.json'
@@ -36,6 +52,9 @@ class Publisher:
         self.executable = executable or shutil.which('nlm')
         if not self.executable or not Path(self.executable).is_file():
             raise ValueError('nlm not found; install notebooklm-mcp-cli separately or pass --nlm /absolute/path')
+        self.client_python = client_python or python_for_cli(self.executable)
+        self.environment_entrypoint = environment_entrypoint
+        self.payloads = {}
         for field, expected in [('source', 'upload/game-tape.md'), ('focus', 'upload/focus.txt')]:
             if self.manifest.get(field) != expected:
                 raise ValueError('only the fixed narration and focus allowlist can be uploaded')
@@ -43,7 +62,8 @@ class Publisher:
             path = original.resolve()
             if not path.is_relative_to(self.folder) or original.is_symlink() or original.parent.is_symlink():
                 raise ValueError('upload paths must stay inside the run')
-            digest = hashlib.sha256(path.read_bytes()).hexdigest()
+            self.payloads[field] = path.read_bytes()
+            digest = hashlib.sha256(self.payloads[field]).hexdigest()
             if digest != self.manifest.get(field + '_sha256'):
                 raise ValueError(f'{field} changed after rendering; use a new run')
         for filename, key in [('evidence.json', 'evidence_sha256'), ('review.json', 'review_sha256')]:
@@ -62,7 +82,16 @@ class Publisher:
         save(self.state_path, self.state)
 
     def call(self, args, timeout=180, json_output=True):
-        result = subprocess.run([self.executable, *args], capture_output=True, text=True, timeout=timeout)
+        if args[0] in ('__single_send_check__', '__single_send_audio__'):
+            if not self.client_python:
+                raise ValueError('cannot locate the client Python; pass --client-python from the nlm environment. Stock CLI audio creation is not used because it may replay writes.')
+            command = [self.client_python, str(Path(__file__).with_name('nlm_single_send.py'))]
+            command += ['--check'] if args[0] == '__single_send_check__' else ['--request', args[1]]
+            if self.environment_entrypoint:
+                command += ['--environment-entrypoint', self.environment_entrypoint]
+        else:
+            command = [self.executable, *args]
+        result = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
         if result.returncode:
             # Do not persist arbitrary CLI output: it may contain credentials or account data.
             raise ValueError(f'nlm failed (exit {result.returncode}) during {args[0]} {args[1] if len(args) > 1 else ""}. Raw output was not logged. Check the CLI directly; a transport/TLS failure is not necessarily expired login.')
@@ -87,31 +116,48 @@ class Publisher:
             raise ValueError('uncertain remote write: reconcile before starting again')
         if self.state.get('artifact_id'):
             return self.state
+        driver = self.call(['__single_send_check__'])
         self.call(['login', '--check'], json_output=False)
+        self.update(client_version=self.call(['--version'], json_output=False).strip(), audio_driver=driver)
         if not self.state.get('notebook_id'):
             made = self.mutation('notebook_create', ['notebook', 'create', self.manifest['title'], '--json'])
             nb = made.get('notebook_id') or made.get('id') if isinstance(made, dict) else None
-            if not nb:
-                raise ValueError('notebook response had no id; reconcile remote result')
+            if not isinstance(nb, str) or not nb.strip():
+                raise ValueError('notebook response had no valid string id; reconcile remote result')
             self.update(notebook_id=nb, notebook_url=f'https://notebooklm.google.com/notebook/{nb}', pending_mutation=None)
         nb = self.state['notebook_id']
         if not self.state.get('source_id'):
-            made = self.mutation('source_add', ['source', 'add', nb, '--file', str(self.folder / self.manifest['source']), '--wait', '--json'])
+            # CLI --file reads later. Seal the verified bytes, not the mutable renderer path.
+            sealed = self.folder / 'sealed' / self.manifest['source_sha256'] / 'game-tape.md'
+            sealed.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+            if not sealed.resolve().is_relative_to(self.folder) or sealed.is_symlink() or sealed.parent.is_symlink():
+                raise ValueError('sealed source must stay inside the run')
+            try:
+                with sealed.open('xb') as handle:
+                    handle.write(self.payloads['source'])
+                sealed.chmod(0o400)
+            except FileExistsError:
+                if sealed.read_bytes() != self.payloads['source']:
+                    raise ValueError('sealed source differs from verified bytes')
+            made = self.mutation('source_add', ['source', 'add', nb, '--file', str(sealed), '--wait', '--json'])
             source = made.get('source_id') or made.get('id') if isinstance(made, dict) else None
-            if not source:
-                raise ValueError('source response had no id; reconcile remote result')
+            if not isinstance(source, str) or not source.strip():
+                raise ValueError('source response had no valid string id; reconcile remote result')
             self.update(source_id=source, pending_mutation=None)
         # Never adopt an unrelated artifact merely because it is audio. A reused notebook must be clean.
         artifacts = rows(self.call(['studio', 'status', nb, '--json']), 'artifacts')
         if any(str(a.get('type', '')).lower() == 'audio' for a in artifacts):
             raise ValueError('notebook already contains untracked audio; reconcile instead of adopting or duplicating it')
-        focus = (self.folder / self.manifest['focus']).read_text(encoding='utf-8').strip()
-        made = self.mutation('audio_create', ['audio', 'create', nb, '--source-ids', self.state['source_id'],
-                '--format', self.manifest['format'], '--length', self.manifest['length'], '--language', self.manifest['language'],
-                '--focus', focus, '--confirm', '--json'])
+        focus = self.payloads['focus'].decode('utf-8').strip()
+        request = {'notebook_id': nb, 'source_ids': [self.state['source_id']], 'format': self.manifest['format'],
+                   'length': self.manifest['length'], 'language': self.manifest['language'], 'focus_prompt': focus, 'profile': None}
+        request_path = self.folder / 'kickoff-request.json'
+        save(request_path, request)
+        self.update(kickoff_request_sha256=fingerprint(request))
+        made = self.mutation('audio_create', ['__single_send_audio__', str(request_path)])
         aid = made.get('artifact_id') or made.get('id') if isinstance(made, dict) else None
-        if not aid:
-            raise ValueError('audio response had no artifact id; reconcile remote result')
+        if not isinstance(aid, str) or not aid.strip():
+            raise ValueError('audio response had no valid artifact id; reconcile remote result')
         self.update(artifact_id=aid, generation_state='generating', audio_quality='unverified', pending_mutation=None)
         return self.state
 
@@ -124,7 +170,13 @@ class Publisher:
             raise ValueError('tracked artifact absent from status; do not substitute another artifact')
         state = str(artifact.get('status', 'unknown')).lower()
         normalized = {'completed': 'generated', 'failed': 'failed', 'error': 'failed', 'cancelled': 'failed', 'canceled': 'failed'}.get(state, 'generating')
-        self.update(generation_state=normalized, remote_status=state, audio_quality='unverified')
+        submitted_focus = self.payloads['focus'].decode('utf-8').strip()
+        recorded_focus = artifact.get('custom_instructions')
+        focus_match = ' '.join(recorded_focus.split()) == ' '.join(submitted_focus.split()) if isinstance(recorded_focus, str) else None
+        recorded_sources = artifact.get('source_ids')
+        sources_match = set(recorded_sources) == {self.state.get('source_id')} if isinstance(recorded_sources, list) and all(isinstance(x, str) for x in recorded_sources) else None
+        self.update(generation_state=normalized, remote_status=state, audio_quality='unverified',
+                    focus_recorded_match=focus_match, source_selection_recorded_match=sources_match)
         if normalized == 'generated' and download:
             dest = self.folder / 'audio.m4a'
             self.call(['download', 'audio', self.state['notebook_id'], '--id', self.state['artifact_id'], '--output', str(dest)], timeout=360, json_output=False)
@@ -135,33 +187,20 @@ class Publisher:
         return self.state
 
 
-@contextlib.contextmanager
-def lock(folder):
-    path = Path(folder).expanduser().resolve() / '.publisher.lock'
-    try:
-        path.mkdir(mode=0o700)
-    except FileExistsError:
-        raise ValueError('another publisher holds this run (or a crashed lock remains). Check the recorded PID before removing the lock.') from None
-    try:
-        (path / 'pid').write_text(str(os.getpid()))
-        yield
-    finally:
-        (path / 'pid').unlink(missing_ok=True)
-        path.rmdir()
-
-
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('action', choices=['start', 'status', 'wait'])
     p.add_argument('run')
     p.add_argument('--nlm', help='absolute path to an nlm-compatible executable, not a shell command')
+    p.add_argument('--client-python', help='Python executable in the pinned notebooklm-mcp-cli environment; auto-detected when possible')
+    p.add_argument('--environment-entrypoint', help='optional existing guarded Python CLI wrapper to load host TLS/environment setup without running its main')
     p.add_argument('--allow-upload', action='store_true')
     p.add_argument('--download', action='store_true')
     p.add_argument('--max-minutes', type=float, default=25)
     a = p.parse_args()
     try:
         with lock(a.run):
-            pub = Publisher(a.run, a.nlm)
+            pub = Publisher(a.run, a.nlm, a.client_python, a.environment_entrypoint)
             if a.action == 'start':
                 state = pub.start(a.allow_upload)
             else:

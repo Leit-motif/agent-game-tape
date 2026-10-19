@@ -1,7 +1,7 @@
-{"type":"session","version":3,"id":"synthetic-openclaw","sessionKey":"agent:main:synthetic","timestamp":"2026-10-19T12:00:00Z"}
-{"type":"message","timestamp":"2026-10-19T12:01:00Z","message":{"role":"user","content":[{"type":"text","text":"## Check the exported evidence\nKeep local-only material local."}],"__openclaw":{"senderIsOwner":true}}}
-{"type":"message","timestamp":"2026-10-19T12:02:00Z","message":{"role":"assistant","content":[{"type":"text","text":"I will inspect the synthetic export."},{"type":"toolCall","id":"synthetic-call","name":"read","arguments":{"path":"synthetic.txt"}}]}}
-{"type":"message","timestamp":"2026-10-19T12:03:00Z","message":{"role":"toolResult","toolCallId":"synthetic-call","content":[{"type":"text","text":"Synthetic export inspected."}]}}
-{"type":"message","timestamp":"2026-10-19T12:04:00Z","message":{"role":"user","content":"Not the owner speaking.","__openclaw":{"senderIsOwner":false}}}
-{"type":"message","timestamp":"2026-10-19T12:05:00Z","message":{"role":"user","content":"[Inter-session message] sourceSession=synthetic\nNot owner-authored."}}
-{"type":"message","timestamp":"2026-10-19T12:06:00Z","message":{"role":"user","content":"{\"type\":\"chatgpt-web-cli.async.delivery\",\"result\":\"Synthetic async event\"}"}}
+{"type":"session","version":3,"id":"synthetic-openclaw","sessionKey":"agent:main:synthetic","timestamp":"2030-10-19T12:00:00Z"}
+{"type":"message","timestamp":"2030-10-19T12:01:00Z","message":{"role":"user","content":[{"type":"text","text":"## Check the exported evidence\nKeep local-only material local."}],"__openclaw":{"senderIsOwner":true}}}
+{"type":"message","timestamp":"2030-10-19T12:02:00Z","message":{"role":"assistant","content":[{"type":"text","text":"I will inspect the synthetic export."},{"type":"toolCall","id":"synthetic-call","name":"read","arguments":{"path":"synthetic.txt"}}]}}
+{"type":"message","timestamp":"2030-10-19T12:03:00Z","message":{"role":"toolResult","toolCallId":"synthetic-call","content":[{"type":"text","text":"Synthetic export inspected."}]}}
+{"type":"message","timestamp":"2030-10-19T12:04:00Z","message":{"role":"user","content":"Not the owner speaking.","__openclaw":{"senderIsOwner":false}}}
+{"type":"message","timestamp":"2030-10-19T12:05:00Z","message":{"role":"user","content":"[Inter-session message] sourceSession=synthetic\nNot owner-authored."}}
+{"type":"message","timestamp":"2030-10-19T12:06:00Z","message":{"role":"user","content":"{\"type\":\"chatgpt-web-cli.async.delivery\",\"result\":\"Synthetic async event\"}"}}

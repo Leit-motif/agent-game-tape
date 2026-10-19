@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import hashlib
 import json
 import os
@@ -42,6 +43,21 @@ def fingerprint(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 
 
+@contextlib.contextmanager
+def run_lock(folder):
+    path = Path(folder).expanduser().resolve() / '.publisher.lock'
+    try:
+        path.mkdir(mode=0o700)
+    except FileExistsError:
+        raise ValueError('another publisher or renderer holds this run (or a crashed lock remains). Check the recorded PID before removing the lock.') from None
+    try:
+        (path / 'pid').write_text(str(os.getpid()))
+        yield
+    finally:
+        (path / 'pid').unlink(missing_ok=True)
+        path.rmdir()
+
+
 def day_window(day, timezone_name, hour=0):
     zone = ZoneInfo(timezone_name)
     chosen = datetime.now(zone).date() - timedelta(days=1) if day == "yesterday" else date.fromisoformat(day)
@@ -59,15 +75,17 @@ def prepare(args):
     if not inputs:
         inputs = [("claude-code", Path(os.environ.get("CLAUDE_CONFIG_DIR", str(Path.home() / ".claude"))) / "projects"),
                   ("codex", Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex"))) / "sessions")]
-    events, coverage = collect(inputs, start - timedelta(hours=args.lookback_hours), end)
+    limits = load(args.scan_limits) if args.scan_limits else None
+    events, coverage = collect(inputs, start - timedelta(hours=args.lookback_hours), end, limits=limits)
     for event in events:
         event['in_window'] = start <= datetime.fromisoformat(event['timestamp']) < end
     folder = Path(args.out).expanduser().resolve()
-    if (folder / "evidence.json").exists():
-        raise ValueError("output already contains evidence; choose a new folder (no silent overwrite)")
+    if folder.exists():
+        raise ValueError("output folder already exists; choose a new folder (no silent overwrite)")
     rules = load(args.rules)
     if not isinstance(rules, dict) or not rules or any(not isinstance(k, str) or not isinstance(v, str) or not v.strip() for k, v in rules.items()):
         raise ValueError("rules must be a nonempty JSON object mapping stable ids to rule text")
+    folder.mkdir(parents=True, exist_ok=False, mode=0o700)
     bundle = {"schema": "agent-game-tape/evidence-v1", "window": [start.isoformat(), end.isoformat()],
               "timezone": args.timezone, "rules": rules, "rules_sha256": fingerprint(rules),
               "rule_source": str(Path(args.rules).expanduser().resolve()),
@@ -90,6 +108,9 @@ def prepare(args):
 def validate(bundle, review):
     problems = []
     events = {e['id']: e for e in bundle['events']}
+    positions = {e['id']: i for i, e in enumerate(bundle['events'])}
+    if len(events) != len(bundle['events']):
+        return ['evidence event ids must be unique']
     if not isinstance(review, dict):
         return ["review must be an object"]
     moments = review.get('moments')
@@ -153,7 +174,7 @@ def validate(bundle, review):
             if not event or not isinstance(span, str) or not span or span not in event['text']:
                 problems.append(f"{prefix}: evidence quote missing from original event")
                 continue
-            if human and (event['session'] != human['session'] or datetime.fromisoformat(event['timestamp']) < datetime.fromisoformat(human['timestamp'])):
+            if human and (event['session'] != human['session'] or positions[event['id']] <= positions[human['id']] or datetime.fromisoformat(event['timestamp']) < datetime.fromisoformat(human['timestamp'])):
                 problems.append(f"{prefix}: use subsequent same-session evidence (cross-session claims require manual reconciliation)")
             tool_evidence |= event['role'] == 'tool'
         if moment.get('assurance') == 'verified' and not tool_evidence:
@@ -175,6 +196,18 @@ def validate(bundle, review):
             problems.append("experiment must link to valid moment_numbers")
     if not isinstance(review.get('blind_spots'), list) or not review['blind_spots'] or any(not isinstance(x, str) or not x.strip() for x in review.get('blind_spots', [])):
         problems.append("blind_spots must be a nonempty array of coverage limitations")
+    if bundle.get('previous_review') is not None:
+        followup = review.get('previous_followup')
+        if not isinstance(followup, dict) or followup.get('status') not in ('applied', 'not_applied', 'inconclusive', 'not_visible'):
+            problems.append('previous_review requires a previous_followup status')
+        else:
+            refs = followup.get('evidence')
+            if not isinstance(refs, list) or any(ref not in events for ref in refs):
+                problems.append('previous_followup evidence must reference collected event ids')
+            elif followup['status'] in ('applied', 'not_applied') and not refs:
+                problems.append('an applied/not_applied conclusion needs evidence; absence is not_visible')
+            if not isinstance(followup.get('summary'), str) or not followup['summary'].strip():
+                problems.append('previous_followup needs a summary')
     return problems
 
 
@@ -196,7 +229,22 @@ def narration(bundle, review, style='prose'):
     return '\n'.join(parts)
 
 
+def build_focus(review, audio_format='deep_dive'):
+    name = 'audio-focus-brief.txt' if audio_format == 'brief' else 'audio-focus.txt'
+    template = (ROOT / 'references' / name).read_text().strip()
+    if '{{closing}}' not in template:
+        raise ValueError('audio focus template must contain {{closing}}')
+    closing = ('Close with the single experiment for next time and its observable check.' if review.get('experiment')
+               else 'Close by reinforcing the supplied useful move to keep.')
+    return template.replace('{{closing}}', closing)
+
+
 def render(args):
+    with run_lock(args.run):
+        return _render(args)
+
+
+def _render(args):
     folder = Path(args.run).expanduser().resolve()
     bundle, review = load(folder / 'evidence.json'), load(folder / 'review.json')
     problems = validate(bundle, review)
@@ -206,6 +254,8 @@ def render(args):
     if review['status'] in ('quiet', 'insufficient_evidence'):
         print(json.dumps({'ok': True, 'status': review['status'], 'reason': review['reason'], 'upload': None}))
         return 0
+    if args.format == 'brief' and len(review['moments']) > 2:
+        raise ValueError('Brief accepts at most two selected moments; revise the review rather than truncate it')
     text = narration(bundle, review, args.style)
     if len(text.split()) > args.max_words:
         raise ValueError(f"narration has {len(text.split())} words; maximum {args.max_words}. Select less, do not truncate facts.")
@@ -213,7 +263,7 @@ def render(args):
     if (folder / 'notebooklm-state.json').exists():
         raise ValueError('run already has NotebookLM state; use a new run folder to change sources')
     write(source, text)
-    focus = (ROOT / 'references' / 'audio-focus.txt').read_text().strip()
+    focus = build_focus(review, args.format)
     write(folder / 'upload' / 'focus.txt', focus + '\n')
     manifest = {'schema': 'agent-game-tape/upload-v1', 'title': f"Game tape {bundle['window'][0][:10]}",
                 'source': 'upload/game-tape.md', 'source_sha256': hashlib.sha256(text.encode()).hexdigest(),
@@ -274,6 +324,7 @@ def main():
     p.add_argument('--openclaw', action='append', default=[], help='explicit exported JSONL folder/file; no live-store assumption')
     p.add_argument('--rules', default=str(ROOT / 'references' / 'rules.json'))
     p.add_argument('--lookback-hours', type=int, choices=range(0, 169), default=24, help='prior context, never eligible as a new moment')
+    p.add_argument('--scan-limits', help='optional JSON file of positive max_* collector limits; effective budgets are retained in coverage')
     p.add_argument('--previous-review', help='optional prior review.json to check whether its experiment was actually tried')
     p.add_argument('--out', required=True)
     p.set_defaults(fn=prepare)

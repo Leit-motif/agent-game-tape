@@ -37,6 +37,22 @@ class ReviewChecks(unittest.TestCase):
         self.review['moments'][0]['evidence'] = [{'event': 'a-2', 'quote': 'I will run the small regression first'}]
         self.assertIn('actual tool-result', ' '.join(tape.validate(self.bundle, self.review)))
 
+    def test_subsequent_evidence_uses_order_even_when_timestamps_tie(self):
+        moment = self.review['moments'][0]
+        moment['assurance'] = 'unknown'
+        moment['evidence'] = [{'event': 'a-1', 'quote': moment['human_quote']}]
+        self.assertIn('subsequent', ' '.join(tape.validate(self.bundle, self.review)))
+        earlier = copy.deepcopy(self.bundle['events'][2])
+        earlier['id'] = 'a-before'
+        earlier['timestamp'] = self.bundle['events'][0]['timestamp']
+        self.bundle['events'].insert(0, earlier)
+        moment['evidence'] = [{'event': 'a-before', 'quote': earlier['text']}]
+        self.assertIn('subsequent', ' '.join(tape.validate(self.bundle, self.review)))
+        self.bundle['events'][3]['timestamp'] = earlier['timestamp']
+        moment['evidence'] = [{'event': 'a-3', 'quote': self.bundle['events'][3]['text']}]
+        moment['assurance'] = 'verified'
+        self.assertEqual(tape.validate(self.bundle, self.review), [])
+
     def test_context_only_call_is_not_new_moment(self):
         self.bundle['events'][0]['in_window'] = False
         self.assertIn('outside the review window', ' '.join(tape.validate(self.bundle, self.review)))
@@ -60,6 +76,8 @@ class ReviewChecks(unittest.TestCase):
         self.review['no_experiment_reason'] = 'Repeat the specific regression-first move; no new correction is supported.'
         self.assertEqual(tape.validate(self.bundle, self.review), [])
         self.assertIn('Keep the useful move', tape.narration(self.bundle, self.review))
+        self.assertNotIn('single experiment', tape.build_focus(self.review))
+        self.assertIn('supplied useful move', tape.build_focus(self.review))
 
     def test_absent_collection_not_quiet(self):
         self.bundle['coverage'] = [{'available': False, 'events': 0}]
@@ -78,6 +96,25 @@ class ReviewChecks(unittest.TestCase):
                 self.assertIn(moment[field], fielded)
         ratio = len(prose.split()) / len(fielded.split())
         self.assertLess(abs(1 - ratio), .1)
+
+    def test_brief_focus_does_not_force_a_moment_count_or_experiment(self):
+        self.review['moments'] = self.review['moments'][:1]
+        self.review['experiment'] = None
+        self.review['no_experiment_reason'] = 'Repeat the demonstrated checkpoint; no new experiment is supported.'
+        focus = tape.build_focus(self.review, 'brief')
+        self.assertIn('selected decisions', focus)
+        self.assertNotIn('two decisions', focus)
+        self.assertNotIn('single experiment', focus)
+        self.assertIn('supplied useful move', focus)
+        self.assertEqual(tape.validate(self.bundle, self.review), [])
+
+    def test_previous_experiment_needs_observed_followup(self):
+        self.bundle['previous_review'] = {'experiment': {'change': 'check first'}}
+        self.assertIn('previous_followup', ' '.join(tape.validate(self.bundle, self.review)))
+        self.review['previous_followup'] = {'status': 'applied', 'evidence': [], 'summary': 'No visible evidence.'}
+        self.assertIn('absence is not_visible', ' '.join(tape.validate(self.bundle, self.review)))
+        self.review['previous_followup']['status'] = 'not_visible'
+        self.assertEqual(tape.validate(self.bundle, self.review), [])
 
     def test_dst_windows_are_calendar_days(self):
         start, end = tape.day_window('2030-03-10', 'America/Chicago')
@@ -142,14 +179,54 @@ class PublisherChecks(unittest.TestCase):
 
     def test_start_resume_no_duplicate_generation(self):
         pub = self.publisher()
-        responses = ['valid', {'notebook_id': 'nb1'}, {'source_id': 'src1'}, [], {'artifact_id': 'audio1'}]
+        responses = [{'single_send': True}, 'valid', 'nlm version test', {'notebook_id': 'nb1'}, {'source_id': 'src1'}, [], {'artifact_id': 'audio1'}]
         with patch.object(pub, 'call', side_effect=responses) as call:
             state = pub.start(True)
             self.assertEqual(state['artifact_id'], 'audio1')
-            self.assertEqual(call.call_count, 5)
+            self.assertEqual(call.call_count, 7)
             pub.start(True)
-            self.assertEqual(call.call_count, 5)
+            self.assertEqual(call.call_count, 7)
         self.assertEqual(state['audio_quality'], 'unverified')
+
+    def test_upload_uses_sealed_verified_bytes_not_later_path_contents(self):
+        pub = self.publisher()
+        expected = pub.payloads['source']
+        calls = []
+        def remote(args, **kwargs):
+            calls.append(args)
+            if args == ['__single_send_check__']:
+                return {'single_send': True}
+            if args[:2] == ['login', '--check']:
+                (self.folder / 'upload/game-tape.md').write_text('externally modified after verification')
+                return 'valid'
+            if args == ['--version']:
+                return 'test-version'
+            if args[:2] == ['notebook', 'create']:
+                return {'notebook_id': 'nb1'}
+            if args[:2] == ['source', 'add']:
+                self.assertEqual(Path(args[args.index('--file') + 1]).read_bytes(), expected)
+                return {'source_id': 'src1'}
+            if args[:2] == ['studio', 'status']:
+                return []
+            if args[0] == '__single_send_audio__':
+                request = tape.load(args[1])
+                self.assertEqual(request['source_ids'], ['src1'])
+                self.assertEqual(request['focus_prompt'], pub.payloads['focus'].decode().strip())
+                return {'artifact_id': 'audio1'}
+            raise AssertionError(args)
+        with patch.object(pub, 'call', side_effect=remote):
+            with nlm.lock(self.folder):
+                pub.start(True)
+        self.assertEqual(pub.state['artifact_id'], 'audio1')
+
+    def test_malformed_remote_id_keeps_uncertain_mutation(self):
+        pub = self.publisher()
+        responses = [{'single_send': True}, 'valid', 'test-version', {'notebook_id': 123}]
+        with patch.object(pub, 'call', side_effect=responses):
+            with self.assertRaisesRegex(ValueError, 'valid string id'):
+                pub.start(True)
+        self.assertEqual(pub.state['pending_mutation'], 'notebook_create')
+        self.assertNotIn('notebook_id', pub.state)
 
     def test_exact_artifact_required(self):
         pub = self.publisher()
@@ -172,6 +249,9 @@ class PublisherChecks(unittest.TestCase):
                 with nlm.lock(self.folder):
                     pass
         self.assertFalse((self.folder / '.publisher.lock').exists())
+        with nlm.lock(self.folder):
+            with self.assertRaisesRegex(ValueError, 'another publisher'):
+                tape.render(argparse.Namespace(run=str(self.folder)))
 
     def test_full_audio_scan_never_auto_accepts(self):
         transcript = {'text': 'A clean opening. Later the agent lied.', 'segments': [{'start': 0, 'end': 600, 'text': 'text'}]}
