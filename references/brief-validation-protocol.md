@@ -32,7 +32,9 @@ At most **two new audio generations**, one per case, one adapter dispatch each. 
 successful narration. Any failed or ambiguous kickoff stops the study until read-only reconciliation;
 zero immediate matches is not permission to resend. Do not bypass the limit through another client.
 
-No paid model/API credits or capacity purchase. Wait for existing quota refresh and verify at least 25%
+No paid model/API credits or capacity purchase. First reconcile the prior ambiguous artifacts by read-only
+status and preserve every completed output; do not start the new study while those prior generations are
+still pending. Wait for existing quota refresh and verify at least 25%
 rolling availability and at least 10% weekly availability before starting. If lower, wait for the provider's
 reported reset. This availability bar is a conservative admission rule, not a per-episode cost estimate.
 The previous unintended overrun is an incident, not authorization for more requests in that trial.
