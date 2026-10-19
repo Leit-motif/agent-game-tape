@@ -13,13 +13,32 @@ malformed, missing timestamps (candidate events), excluded, unsupported, and
 unavailable files. `recognized_records` counts known envelopes, not acceptance.
 Counters can overlap (e.g. delegated records are also excluded). All limits below
 are hard local scan/output caps; reaching one is reported, never a full scan.
+Files are discovered before the file cap is applied, then read newest-mtime first
+(across subdirectories), so years of old exports do not starve recent sessions.
+Modification time is a priority hint, NOT evidence that a file is outside the
+requested window. All discovered files remain eligible. Discovery itself is
+bounded and reported; no completeness is claimed when a cap is reached. File
+and byte budgets are shared fairly across remaining input roots. Callers can
+raise/lower positive caps with collect(..., limits={"max_bytes_per_file": ...,
+"max_total_bytes": ...}); effective limits and each root's budget are reported.
 A file whose byte/line/record scan was cut short yields no events, so unseen late
 session metadata cannot turn a delegated prompt into a human call.
 
 Only JSONL exports are read. No live databases, subprocesses, or network access.
 Compressed JSONL is explicitly unsupported, including Codex .jsonl.zst. Codex
-uses response_item only: event_msg is NOT a fallback. Event-only/paginated
-item_completed/UserMessage/AgentMessage history is reported as unsupported.
+selects one authoritative stream using session_meta.payload.history_mode:
+legacy (also the absent-field default) uses response_item; paginated uses
+completed TurnItems in event_msg.item_completed, never legacy user_message or
+agent_message notifications. Raw response items are skipped in paginated mode
+so duplicate messages/tool evidence cannot be counted twice. Supported completed
+items: UserMessage, AgentMessage, Plan, CommandExecution, FunctionCallOutput,
+DynamicToolCall, and McpToolCall. Other durable items are explicitly counted as
+unsupported; hidden reasoning, hooks, and task activity are excluded. Schema
+verified against openai/codex rust-v0.163.0 (commit83086188ae0614bd882818ff1aa23f3194962012):
+codex-rs/protocol/src/{protocol,items,user_input}.rs, history/src/rollout_payload.rs,
+and rollout/src/policy.rs.
+Unknown or contradictory history modes fail closed. Inherited history references
+are not followed; collection is of the supplied physical export files only.
 Claude meta/sidechain/team/compaction and known SDK/ACP prompts are excluded.
 Codex subagent and exec sessions and explicitly delegated OpenClaw sessions are
 excluded, even if metadata occurs after messages. Missing provenance remains a
@@ -54,10 +73,10 @@ MAX_INPUTS = 64
 MAX_FILES = 512
 MAX_PATHS = 20_000
 MAX_DEPTH = 32
-MAX_TOTAL_BYTES = 64 * 1024 * 1024
-MAX_BYTES_PER_FILE = 8 * 1024 * 1024
-MAX_RECORDS_PER_FILE = 20_000
-MAX_LINE_BYTES = 1024 * 1024
+MAX_TOTAL_BYTES = 256 * 1024 * 1024
+MAX_BYTES_PER_FILE = 64 * 1024 * 1024
+MAX_RECORDS_PER_FILE = 100_000
+MAX_LINE_BYTES = 16 * 1024 * 1024
 MAX_EVENTS = 10_000
 MAX_EVENT_CHARS = 16_000
 TRUNCATION = "\n[TRUNCATED: consult the original local transcript]"
@@ -80,8 +99,8 @@ INJECTED_TAGS = (
 TEXT_BLOCKS = {"text", "input_text", "output_text"}
 NON_TEXT_BLOCKS = {"image", "input_image", "image_url", "audio", "input_audio", "document"}
 CLAUDE_METADATA = {"system", "summary", "progress", "file-history-snapshot", "queue-operation", "last-prompt", "pr-link"}
-CODEX_METADATA = {"turn_context", "compacted"}
-CODEX_NOISE = {"token_count", "task_started", "task_complete", "turn_started", "turn_complete", "turn_aborted", "error", "warning", "context_compacted", "agent_reasoning", "agent_reasoning_raw_content"}
+CODEX_METADATA = {"turn_context", "compacted", "token_usage_record", "world_state", "retained_context", "security_risk_score", "inter_agent_communication", "inter_agent_communication_metadata"}
+CODEX_NOISE = {"token_count", "task_started", "task_complete", "turn_started", "turn_complete", "turn_aborted", "error", "warning", "context_compacted", "agent_reasoning", "agent_reasoning_raw_content", "item_started", "thread_goal_updated", "thread_rolled_back", "thread_settings_applied"}
 OPENCLAW_METADATA = {"session", "model_change", "thinking_level_change", "custom", "custom_message", "compaction", "branch_summary", "label"}
 COMPRESSED_SUFFIXES = (".jsonl.zst", ".jsonl.gz", ".jsonl.bz2", ".jsonl.xz", ".jsonl.zip")
 RawEvent = tuple[int, Any, str, str]
@@ -266,6 +285,7 @@ def _automated_claude(obj: dict) -> bool:
 def _json_rows(path: Path, stats: Stats, budget: Stats) -> list[tuple[int, dict]]:
     """Read bounded physical lines, rejecting non-finite JSON numbers and symlink leaves."""
     rows: list[tuple[int, dict]] = []
+    limits = budget["limits"]
     incomplete = False
     io_failed = False
     read_bytes = 0
@@ -284,33 +304,35 @@ def _json_rows(path: Path, stats: Stats, budget: Stats) -> list[tuple[int, dict]
             raise
         with handle:
             while True:
-                allowance = min(MAX_BYTES_PER_FILE - read_bytes, budget["bytes"])
-                if allowance <= 0 or number >= MAX_RECORDS_PER_FILE:
+                allowance = min(limits["max_bytes_per_file"] - read_bytes, budget["bytes"], budget["input_bytes"])
+                if allowance <= 0 or number >= limits["max_records_per_file"]:
                     incomplete = True
                     break
-                chunk = handle.readline(min(MAX_LINE_BYTES + 1, allowance))
+                chunk = handle.readline(min(limits["max_line_bytes"] + 1, allowance))
                 if not chunk:
                     break
                 number += 1
                 stats["lines"] += 1
                 read_bytes += len(chunk)
                 budget["bytes"] -= len(chunk)
+                budget["input_bytes"] -= len(chunk)
                 stats["bytes_read"] += len(chunk)
-                if not chunk.endswith(b"\n") and len(chunk) == allowance and len(chunk) <= MAX_LINE_BYTES:
+                if not chunk.endswith(b"\n") and len(chunk) == allowance and len(chunk) <= limits["max_line_bytes"]:
                     incomplete = True  # The byte budget cut a physical line short.
                     break
-                if len(chunk) > MAX_LINE_BYTES:
+                if len(chunk) > limits["max_line_bytes"]:
                     # Discard the rest of the physical line without allocating it.
                     stats["oversized_lines"] += 1
                     oversized = True
                     while chunk and not chunk.endswith(b"\n"):
-                        allowance = min(MAX_BYTES_PER_FILE - read_bytes, budget["bytes"])
+                        allowance = min(limits["max_bytes_per_file"] - read_bytes, budget["bytes"], budget["input_bytes"])
                         if allowance <= 0:
                             incomplete = True
                             break
-                        chunk = handle.readline(min(MAX_LINE_BYTES + 1, allowance))
+                        chunk = handle.readline(min(limits["max_line_bytes"] + 1, allowance))
                         read_bytes += len(chunk)
                         budget["bytes"] -= len(chunk)
+                        budget["input_bytes"] -= len(chunk)
                         stats["bytes_read"] += len(chunk)
                     if incomplete:
                         break
@@ -395,9 +417,74 @@ def claude_records(path: Path, stats: Stats, budget: Stats) -> Iterator[RawEvent
             stats["excluded_records"] += 1
 
 
+def _codex_completed(item: Any, line: int, raw_ts: Any, stats: Stats) -> Iterator[RawEvent]:
+    """The PascalCase TurnItem wire shape in Codex 0.163, not legacy event text."""
+    if not isinstance(item, dict) or not isinstance(item.get("type"), str) or not isinstance(item.get("id"), str):
+        stats["malformed_records"] += 1
+        return
+    typ = item["type"]
+    if typ in {"Reasoning", "HookPrompt", "ContextCompaction", "SubAgentActivity", "EnteredReviewMode", "ExitedReviewMode"}:
+        stats["excluded_records"] += 1
+    elif typ in {"UserMessage", "AgentMessage"}:
+        content = item.get("content")
+        if not isinstance(content, list):
+            stats["malformed_records"] += 1
+            return
+        if typ == "AgentMessage":
+            content = [{**block, "type": "text"} if isinstance(block, dict) and block.get("type") == "Text" else block for block in content]
+        if not _content_valid(content, {"local_image", "local_audio", "skill", "mention"}, stats):
+            return
+        text = _human_content(content) if typ == "UserMessage" else text_of(content)
+        if text.strip():
+            yield line, raw_ts, "human" if typ == "UserMessage" else "assistant", text
+        else:
+            stats["excluded_records"] += 1
+    elif typ == "Plan":
+        if isinstance(item.get("text"), str):
+            yield line, raw_ts, "assistant", item["text"]
+        else:
+            stats["malformed_records"] += 1
+    elif typ == "CommandExecution":
+        command = item.get("command")
+        if not isinstance(command, list) or not all(isinstance(part, str) for part in command):
+            stats["malformed_records"] += 1
+            return
+        yield line, raw_ts, "tool_call", "command " + _body({"command": command, "cwd": item.get("cwd")})
+        output = {key: item[key] for key in ("aggregated_output", "exit_code", "status") if key in item}
+        if output:
+            yield line, raw_ts, "tool", _body(output)
+    elif typ == "FunctionCallOutput":
+        if "output" in item:
+            yield line, raw_ts, "tool", _body(item["output"])
+        else:
+            stats["malformed_records"] += 1
+    elif typ in {"DynamicToolCall", "McpToolCall"}:
+        if not isinstance(item.get("tool"), str) or "arguments" not in item:
+            stats["malformed_records"] += 1
+            return
+        name = (str(item.get("server", "")) + "/" if typ == "McpToolCall" else "") + item["tool"]
+        yield line, raw_ts, "tool_call", name + " " + _body(item["arguments"])
+        output = {key: item[key] for key in ("content_items", "result", "error", "success", "status") if key in item}
+        if output:
+            yield line, raw_ts, "tool", _body(output)
+    else:
+        _unsupported(stats)
+
+
 def codex_records(path: Path, stats: Stats, budget: Stats) -> Iterator[RawEvent]:
     rows = _json_rows(path, stats, budget)
     metadata = [obj["payload"] for _, obj in rows if obj.get("type") == "session_meta" and isinstance(obj.get("payload"), dict)]
+    modes = [meta.get("history_mode", "legacy") for meta in metadata] or ["legacy"]
+    malformed_header = any(obj.get("type") == "session_meta" and not isinstance(obj.get("payload"), dict) for _, obj in rows)
+    if malformed_header or any(not isinstance(mode, str) or mode not in {"legacy", "paginated"} for mode in modes) or len(set(modes)) > 1:
+        stats["malformed_records"] += int(malformed_header)
+        stats["unsupported_history_files"] += 1
+        stats["excluded_records"] += len(rows)
+        _unsupported(stats)
+        return
+    mode = modes[0]
+    if rows:
+        stats[mode + "_files"] += 1
     delegated = any(isinstance(meta.get("source"), dict) and "subagent" in meta["source"] for meta in metadata)
     automated = any(meta.get("source") == "exec" or (isinstance(meta.get("source"), dict) and "exec" in meta["source"])
                     or str(meta.get("originator", "")).startswith("codex_exec") for meta in metadata)
@@ -422,15 +509,34 @@ def codex_records(path: Path, stats: Stats, budget: Stats) -> Iterator[RawEvent]
         if kind in {"session_meta"} | CODEX_METADATA:
             stats["excluded_records"] += 1
             continue
+        record_meta = obj.get("metadata")
+        if record_meta is None:
+            record_meta = {}
+        if not isinstance(record_meta, dict):
+            stats["malformed_records"] += 1
+            continue
+        if record_meta.get("inherited_user_message") or record_meta.get("compaction_output"):
+            stats["excluded_records"] += 1
+            continue
         typ = payload.get("type")
         if not isinstance(typ, str):
             stats["malformed_records"] += 1
             continue
         if kind == "event_msg":
-            if typ == "item_completed" or (typ in {"user_message", "agent_message"} and not canonical_messages) or typ not in CODEX_NOISE | {"user_message", "agent_message"}:
+            if mode == "paginated" and typ == "item_completed":
+                raw_ts = obj.get("timestamp", payload.get("completed_at_ms") or None)
+                yield from _codex_completed(payload.get("item"), line, raw_ts, stats)
+            elif mode == "paginated" and typ in {"user_message", "agent_message"}:
+                stats["duplicate_stream_records"] += 1
+                stats["excluded_records"] += 1
+            elif typ == "item_completed" or (typ in {"user_message", "agent_message"} and not canonical_messages) or typ not in CODEX_NOISE | {"user_message", "agent_message"}:
                 _unsupported(stats)
             else:
                 stats["excluded_records"] += 1
+            continue
+        if mode == "paginated":
+            stats["duplicate_stream_records"] += 1
+            stats["excluded_records"] += 1
             continue
         if typ == "message":
             role, content = payload.get("role"), payload.get("content")
@@ -540,47 +646,77 @@ def _coverage(harness: str, root: Path) -> Stats:
         "delegated_records", "automated_records", "outside_window_events", "empty_events",
         "symlink_paths", "duplicate_files", "compressed_files", "oversized_lines",
         "limited_files", "incomplete_files", "limited_paths", "event_limit_reached",
+        "legacy_files", "paginated_files", "unsupported_history_files", "duplicate_stream_records",
+        "candidate_files", "file_budget", "byte_budget",
     )
     return {"harness": harness, "root": _path_label(root), "available": False,
             "schema_recognized": False, "status": "unavailable", **dict.fromkeys(counters, 0)}
 
 
 def _paths(root: Path, stats: Stats, budget: Stats) -> Iterator[Path]:
+    """Bounded metadata discovery, then global-per-root newest-file-first admission."""
     if root.is_file():
+        stats["candidate_files"] += 1
         yield root
         return
     pending = [(root, 0)]
+    candidates = []
+    exhausted = False
     while pending:
         directory, depth = pending.pop()
         entries = []
+        subdirectories = []
         try:
             with os.scandir(directory) as iterator:
                 for entry in iterator:
                     if budget["paths"] <= 0:
                         stats["limited_paths"] += 1
-                        return
+                        exhausted = True
+                        break
                     budget["paths"] -= 1
                     entries.append(entry)
         except OSError:
             stats["unreadable_files"] += 1
             continue
-        for entry in sorted(entries, key=lambda item: item.name):
+        for entry in entries:
             path = Path(entry.path)
             try:
                 if entry.is_symlink():
                     stats["symlink_paths"] += 1
                 elif entry.is_dir(follow_symlinks=False):
-                    if depth >= MAX_DEPTH:
+                    if depth >= budget["limits"]["max_depth"]:
                         stats["limited_paths"] += 1
                     else:
-                        pending.append((path, depth + 1))
+                        subdirectories.append((entry.stat(follow_symlinks=False).st_mtime_ns, str(path), path))
                 elif entry.name.endswith(".jsonl") or entry.name.endswith(COMPRESSED_SUFFIXES):
                     if entry.is_file(follow_symlinks=False):
-                        yield path
+                        stats["candidate_files"] += 1
+                        candidates.append((entry.stat(follow_symlinks=False).st_mtime_ns, str(path), path))
                     else:
                         stats["unavailable_files"] += 1
             except OSError:
                 stats["unreadable_files"] += 1
+        if exhausted:
+            break
+        # Recent directories are discovered first if the path budget is exhausted.
+        pending.extend((path, depth + 1) for _, _, path in sorted(subdirectories))
+    yield from (path for _, _, path in sorted(candidates, key=lambda entry: (-entry[0], entry[1])))
+
+
+def _scan_limits(overrides: dict[str, int] | None) -> dict[str, int]:
+    values = {
+        "max_inputs": MAX_INPUTS, "max_files": MAX_FILES, "max_paths": MAX_PATHS,
+        "max_depth": MAX_DEPTH, "max_total_bytes": MAX_TOTAL_BYTES,
+        "max_bytes_per_file": MAX_BYTES_PER_FILE, "max_records_per_file": MAX_RECORDS_PER_FILE,
+        "max_line_bytes": MAX_LINE_BYTES, "max_events": MAX_EVENTS,
+        "max_event_chars": MAX_EVENT_CHARS,
+    }
+    if overrides is not None:
+        if not isinstance(overrides, dict) or any(key not in values or not isinstance(value, int)
+                                                 or isinstance(value, bool) or value <= 0 for key, value in overrides.items()):
+            raise ValueError("limits must use known max_* names and positive integer values")
+        values.update(overrides)
+    return values
 
 
 def _status(stats: Stats) -> str:
@@ -599,24 +735,33 @@ def _status(stats: Stats) -> str:
     return "ok" if stats["events"] else "no_events"
 
 
-def collect(inputs: list[tuple[str, Path]], start: datetime, end: datetime) -> tuple[list[dict], list[dict]]:
-    """Collect bounded, sanitized events and explicit per-input coverage; never write files."""
+def collect(inputs: list[tuple[str, Path]], start: datetime, end: datetime, *,
+            limits: dict[str, int] | None = None) -> tuple[list[dict], list[dict]]:
+    """Collect read-only JSONL evidence; optional positive max_* limits override defaults."""
+    effective = _scan_limits(limits)
     if not isinstance(start, datetime) or not isinstance(end, datetime) or start.utcoffset() is None or end.utcoffset() is None:
         raise ValueError("start and end must be timezone-aware datetimes")
     start, end = start.astimezone(timezone.utc), end.astimezone(timezone.utc)
     if start >= end:
         raise ValueError("end must be strictly after start")
-    if len(inputs) > MAX_INPUTS:
-        raise ValueError(f"at most {MAX_INPUTS} inputs are supported")
+    if len(inputs) > effective["max_inputs"]:
+        raise ValueError(f"at most {effective['max_inputs']} inputs are supported")
     if any(harness not in ADAPTERS for harness, _ in inputs):
         raise ValueError("unsupported harness; choose claude-code, codex, or openclaw")
     events: list[dict] = []
     coverage: list[dict] = []
     seen: set[tuple[str, str]] = set()
-    budget = {"files": MAX_FILES, "paths": MAX_PATHS, "bytes": MAX_TOTAL_BYTES, "events": MAX_EVENTS}
-    for harness, supplied in inputs:
+    budget = {"files": effective["max_files"], "paths": effective["max_paths"],
+              "bytes": effective["max_total_bytes"], "events": effective["max_events"], "limits": effective}
+    for input_index, (harness, supplied) in enumerate(inputs):
         root = Path(supplied).expanduser().absolute()
         stats = _coverage(harness, root)
+        stats["limits"] = dict(effective)
+        roots_left = len(inputs) - input_index
+        file_quota = max(1, budget["files"] // roots_left) if budget["files"] else 0
+        byte_quota = max(1, budget["bytes"] // roots_left) if budget["bytes"] else 0
+        stats["file_budget"], stats["byte_budget"] = file_quota, byte_quota
+        budget["input_bytes"] = byte_quota
         coverage.append(stats)
         try:
             mode = root.lstat().st_mode
@@ -639,7 +784,7 @@ def collect(inputs: list[tuple[str, Path]], start: datetime, end: datetime) -> t
             stats["event_limit_reached" if budget["events"] <= 0 else "limited_files"] += 1
         else:
             for path in _paths(root, stats, budget):
-                if budget["files"] <= 0 or budget["bytes"] <= 0 or budget["events"] <= 0:
+                if stats["files"] >= file_quota or budget["input_bytes"] <= 0 or budget["files"] <= 0 or budget["bytes"] <= 0 or budget["events"] <= 0:
                     stats["event_limit_reached" if budget["events"] <= 0 else "limited_files"] += 1
                     break
                 if path.name.endswith(COMPRESSED_SUFFIXES):
@@ -673,11 +818,11 @@ def collect(inputs: list[tuple[str, Path]], start: datetime, end: datetime) -> t
                         stats["empty_events"] += 1
                         continue
                     safe = sanitize(text)
-                    truncated = len(safe) > MAX_EVENT_CHARS
+                    truncated = len(safe) > effective["max_event_chars"]
                     if truncated:
                         stats["truncated_events"] += 1
-                        keep = max(0, MAX_EVENT_CHARS - len(TRUNCATION))
-                        safe = (safe[:keep] + TRUNCATION)[:MAX_EVENT_CHARS]
+                        keep = max(0, effective["max_event_chars"] - len(TRUNCATION))
+                        safe = (safe[:keep] + TRUNCATION)[:effective["max_event_chars"]]
                     events.append({"id": f"{harness}:{digest}:{line}:{ordinal}", "session": digest,
                                    "harness": harness, "source": source, "line": line,
                                    "timestamp": ts.isoformat(), "role": role, "text": safe, "truncated": truncated})

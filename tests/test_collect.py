@@ -136,24 +136,23 @@ class CollectTests(unittest.TestCase):
         self.assertEqual(coverage[0]["human_events"], 1)
         self.assertGreaterEqual(coverage[0]["excluded_records"], 3)
 
-    def test_codex_paginated_history_reports_unsupported_instead_of_success(self):
-        path = self.write_records("paginated.jsonl", [
-            {"type": "session_meta", "payload": {"source": "cli", "history_mode": "paginated"}},
-            {"type": "event_msg", "timestamp": "2026-10-19T10:00:00Z", "payload": {
-                "type": "item_completed", "item": {"type": "UserMessage", "content": "Synthetic paginated prompt."},
-            }},
-            {"type": "event_msg", "timestamp": "2026-10-19T10:01:00Z", "payload": {
-                "type": "item_completed", "item": {"type": "AgentMessage", "content": "Synthetic paginated reply."},
-            }},
+    def test_codex_0163_paginated_completed_items_are_canonical_without_duplicates(self):
+        events, coverage = self.collect_fixture("codex", "codex-paginated.jsonl")
+        self.assertEqual([event["role"] for event in events], [
+            "human", "assistant", "tool_call", "tool", "tool", "assistant",
         ])
-        events, coverage = collector.collect([("codex", path)], START, END)
-        self.assertEqual(events, [])
-        self.assertEqual(coverage[0]["unsupported_records"], 2)
-        self.assertEqual(coverage[0]["status"], "unsupported")
+        self.assertEqual(events[0]["text"], "# Current Codex request\nUser instructions: preserve this prompt.")
+        self.assertEqual(events[1]["text"], "I will verify the current format.")
+        self.assertEqual([event["line"] for event in events], [4, 6, 9, 9, 10, 13])
+        self.assertIn('"exit_code": 0', events[3]["text"])
+        self.assertEqual(coverage[0]["paginated_files"], 1)
+        self.assertEqual(coverage[0]["human_events"], 1)
+        self.assertEqual(coverage[0]["unsupported_records"], 0)
+        self.assertEqual(coverage[0]["status"], "ok")
 
     def test_public_adapter_names_and_event_contract(self):
         self.assertEqual(set(collector.ADAPTERS), {"claude-code", "codex", "openclaw"})
-        for harness, fixture in (("claude-code", "claude.jsonl"), ("codex", "codex.jsonl"), ("openclaw", "openclaw.jsonl")):
+        for harness, fixture in (("claude-code", "claude.jsonl"), ("codex", "codex.jsonl"), ("codex", "codex-paginated.jsonl"), ("openclaw", "openclaw.jsonl")):
             with self.subTest(harness=harness):
                 events, _ = self.collect_fixture(harness, fixture)
                 for event in events:
@@ -500,6 +499,145 @@ class CollectTests(unittest.TestCase):
         path = self.write_records("markdown-spacing.jsonl", [self.claude_message(text) for text in prompts])
         events, _ = collector.collect([("claude-code", path)], START, END)
         self.assertEqual([event["text"] for event in events], prompts)
+
+    def test_paginated_mode_still_excludes_delegated_and_exec_sessions(self):
+        rows = [json.loads(line) for line in (FIXTURES / "codex-paginated.jsonl").read_text(encoding="utf-8").splitlines()]
+        for source in ({"subagent": {"thread_spawn": {"parent_thread_id": "synthetic"}}}, "exec"):
+            with self.subTest(source=source):
+                rows[0]["payload"]["source"] = source
+                path = self.write_records("paginated-automated.jsonl", rows)
+                events, coverage = collector.collect([("codex", path)], START, END)
+                self.assertEqual(events, [])
+                self.assertGreater(coverage[0]["excluded_records"], 0)
+
+    def test_unknown_codex_history_modes_fail_closed(self):
+        for mode in ("future", [], {}):
+            with self.subTest(mode=mode):
+                path = self.write_records("unknown-mode.jsonl", [
+                    {"type": "session_meta", "payload": {"source": "cli", "history_mode": mode}},
+                    {"type": "response_item", "timestamp": "2026-10-19T10:00:00Z", "payload": {"type": "message", "role": "user", "content": "Cannot infer the authoritative stream."}},
+                ])
+                events, coverage = collector.collect([("codex", path)], START, END)
+                self.assertEqual(events, [])
+                self.assertEqual(coverage[0]["unsupported_history_files"], 1)
+                self.assertEqual(coverage[0]["status"], "unsupported")
+
+    def test_recent_session_is_not_starved_by_more_than_512_older_exports(self):
+        for index in range(520):
+            old = self.write_records(f"archive/old-{index:04}.jsonl", [self.claude_message("Old evidence.", "2025-01-01T10:00:00Z")])
+            os.utime(old, (1735725600, 1735725600))
+        recent = self.write_records("archive/z-current.jsonl", [self.claude_message("Yesterday's relevant session.")])
+        os.utime(recent, (1792404000, 1792404000))
+        events, coverage = collector.collect([("claude-code", self.root)], START, END)
+        self.assertEqual([event["text"] for event in events], ["Yesterday's relevant session."])
+        self.assertEqual(coverage[0]["files"], 512)
+        self.assertEqual(coverage[0]["status"], "limited")
+        self.assertGreater(coverage[0]["limited_files"], 0)
+
+    def test_longer_than_8mib_session_and_large_tool_line_work_with_defaults(self):
+        path = self.write_records("ordinary-long.jsonl", [
+            self.claude_message("Keep the important steering prompt."),
+            {"type": "user", "timestamp": "2026-10-19T10:01:00Z", "message": {"role": "user", "content": [
+                {"type": "tool_result", "content": "x" * (9 * 1024 * 1024)},
+            ]}},
+            {"type": "assistant", "timestamp": "2026-10-19T10:02:00Z", "message": {"role": "assistant", "content": "Verification after a large tool result."}},
+        ])
+        events, coverage = collector.collect([("claude-code", path)], START, END)
+        self.assertEqual([event["role"] for event in events], ["human", "tool", "assistant"])
+        self.assertEqual(events[-1]["text"], "Verification after a large tool result.")
+        self.assertTrue(events[1]["truncated"])
+        self.assertEqual(coverage[0]["incomplete_files"], 0)
+        self.assertEqual(coverage[0]["status"], "ok")
+
+    def test_scan_limits_can_be_raised_by_caller_without_source_edits(self):
+        path = self.write_records("configured.jsonl", [self.claude_message("A complete prompt under caller-selected caps.")])
+        with patch.object(collector, "MAX_BYTES_PER_FILE", 40), patch.object(collector, "MAX_TOTAL_BYTES", 40):
+            events, coverage = collector.collect([("claude-code", path)], START, END, limits={
+                "max_bytes_per_file": 1024, "max_total_bytes": 1024,
+            })
+        self.assertEqual(len(events), 1)
+        self.assertEqual(coverage[0]["limits"]["max_bytes_per_file"], 1024)
+        for limits in ({"imaginary_limit": 1}, {"max_files": 0}, {"max_files": True}):
+            with self.subTest(limits=limits), self.assertRaises(ValueError):
+                collector.collect([], START, END, limits=limits)
+
+    def test_input_roots_share_file_budget_instead_of_starving_later_harness(self):
+        for name in ("old-a.jsonl", "old-b.jsonl", "old-c.jsonl"):
+            path = self.write_records("claude/" + name, [self.claude_message("Older export.", "2025-01-01T00:00:00Z")])
+            os.utime(path, (1735689600, 1735689600))
+        recent = self.write_records("claude/recent.jsonl", [self.claude_message("Recent Claude prompt.")])
+        os.utime(recent, (1792404000, 1792404000))
+        codex = self.write_records("codex/recent.jsonl", [
+            {"type": "session_meta", "payload": {"source": "cli", "history_mode": "legacy"}},
+            {"type": "response_item", "timestamp": "2026-10-19T11:00:00Z", "payload": {"type": "message", "role": "user", "content": "Recent Codex prompt."}},
+        ])
+        events, coverage = collector.collect([("claude-code", recent.parent), ("codex", codex.parent)], START, END,
+                                             limits={"max_files": 2})
+        self.assertEqual([event["text"] for event in events], ["Recent Claude prompt.", "Recent Codex prompt."])
+        self.assertEqual([stats["files"] for stats in coverage], [1, 1])
+        self.assertEqual(coverage[0]["status"], "limited")
+        self.assertEqual(coverage[1]["status"], "ok")
+
+    def test_paginated_plan_and_typed_tool_results_are_assistant_or_tool_not_human(self):
+        items = [
+            {"type": "Plan", "id": "plan-1", "text": "Verify the synthetic boundary."},
+            {"type": "DynamicToolCall", "id": "dynamic-1", "tool": "synthetic_tool", "arguments": {"safe": True}, "status": "completed", "content_items": [{"type": "input_text", "text": "A synthetic result."}], "success": True},
+            {"type": "McpToolCall", "id": "mcp-1", "server": "synthetic-server", "tool": "verify", "arguments": {}, "status": "completed", "result": {"content": [{"type": "text", "text": "Verified."}]}, "error": None},
+            {"type": "HookPrompt", "id": "hook-1", "fragments": [{"text": "Automated hook instructions.", "hookRunId": "synthetic-hook"}]},
+        ]
+        path = self.write_records("typed-items.jsonl", [
+            {"type": "session_meta", "payload": {"source": "cli", "history_mode": "paginated"}},
+            *({"type": "event_msg", "timestamp": "2026-10-19T10:00:00Z", "payload": {"type": "item_completed", "item": item}} for item in items),
+        ])
+        events, coverage = collector.collect([("codex", path)], START, END)
+        self.assertEqual([event["role"] for event in events], ["assistant", "tool_call", "tool", "tool_call", "tool"])
+        self.assertTrue(events[3]["text"].startswith("synthetic-server/verify "))
+        self.assertIn("Verified.", events[4]["text"])
+        self.assertEqual(coverage[0]["human_events"], 0)
+        self.assertEqual(coverage[0]["unsupported_records"], 0)
+
+    def test_unknown_paginated_items_are_reported_and_bad_items_do_not_crash(self):
+        path = self.write_records("unknown-items.jsonl", [
+            {"type": "session_meta", "payload": {"source": "cli", "history_mode": "paginated"}},
+            {"type": "event_msg", "timestamp": "2026-10-19T10:00:00Z", "payload": {"type": "item_completed", "item": {"type": "FutureItem", "id": "future-1"}}},
+            {"type": "event_msg", "timestamp": "2026-10-19T10:01:00Z", "payload": {"type": "item_completed", "item": {"type": [], "id": "bad-1"}}},
+        ])
+        events, coverage = collector.collect([("codex", path)], START, END)
+        self.assertEqual(events, [])
+        self.assertEqual(coverage[0]["unsupported_records"], 1)
+        self.assertEqual(coverage[0]["malformed_records"], 1)
+        self.assertEqual(coverage[0]["status"], "unsupported")
+
+    def test_codex_inherited_context_and_compaction_are_not_original_messages(self):
+        path = self.write_records("inherited.jsonl", [
+            {"type": "session_meta", "payload": {"source": "cli", "history_mode": "legacy"}},
+            {"type": "response_item", "timestamp": "2026-10-19T10:00:00Z", "metadata": {"inherited_user_message": True}, "payload": {"type": "message", "role": "user", "content": "Copied parent context."}},
+            {"type": "response_item", "timestamp": "2026-10-19T10:01:00Z", "metadata": {"compaction_output": True}, "payload": {"type": "message", "role": "assistant", "content": "A generated compaction summary."}},
+        ])
+        events, coverage = collector.collect([("codex", path)], START, END)
+        self.assertEqual(events, [])
+        self.assertEqual(coverage[0]["unsupported_records"], 0)
+        damaged = self.write_records("damaged-header.jsonl", [
+            {"type": "session_meta", "payload": []},
+            {"type": "response_item", "timestamp": "2026-10-19T10:00:00Z", "payload": {"type": "message", "role": "user", "content": "Cannot safely select a stream."}},
+        ])
+        events, coverage = collector.collect([("codex", damaged)], START, END)
+        self.assertEqual(events, [])
+        self.assertEqual(coverage[0]["unsupported_history_files"], 1)
+        self.assertEqual(coverage[0]["malformed_records"], 1)
+
+    def test_completed_item_timestamp_fallback_and_conflicting_modes(self):
+        item_row = {"type": "event_msg", "payload": {"type": "item_completed", "completed_at_ms": 1792404000000,
+                    "item": {"type": "AgentMessage", "id": "message-1", "content": [{"type": "Text", "text": "Timestamp fallback."}]}}}
+        header = {"type": "session_meta", "payload": {"source": "cli", "history_mode": "paginated"}}
+        path = self.write_records("timestamp-fallback.jsonl", [header, item_row])
+        events, _ = collector.collect([("codex", path)], START, END)
+        self.assertEqual(events[0]["timestamp"], "2026-10-19T10:00:00+00:00")
+        conflicting = self.write_records("conflicting.jsonl", [header, item_row,
+                        {"type": "session_meta", "payload": {"source": "cli", "history_mode": "legacy"}}])
+        events, coverage = collector.collect([("codex", conflicting)], START, END)
+        self.assertEqual(events, [])
+        self.assertEqual(coverage[0]["unsupported_history_files"], 1)
 
 
 if __name__ == "__main__":
