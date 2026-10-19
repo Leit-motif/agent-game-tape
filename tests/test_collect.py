@@ -226,6 +226,23 @@ class CollectTests(unittest.TestCase):
         single, _ = collector.collect([("claude-code", first)], START, END)
         self.assertIn(single[0]["id"], {event["id"] for event in events})
 
+    def test_tied_timestamps_preserve_more_than_ten_blocks_on_one_line(self):
+        path = self.write_records('many-results.jsonl', [
+            self.claude_message('Check the recorded results first.'),
+            {'type': 'user', 'timestamp': '2030-10-19T10:00:00Z', 'message': {
+                'role': 'user', 'content': [
+                    {'type': 'tool_result', 'tool_use_id': f'tool-{n}', 'content': f'Result {n}'}
+                    for n in range(12)
+                ]}},
+        ])
+        events, _ = collector.collect([('claude-code', path)], START, END)
+        self.assertEqual([event['text'] for event in events], [
+            'Check the recorded results first.', 'Result 0', 'Result 1', 'Result 2',
+            'Result 3', 'Result 4', 'Result 5', 'Result 6', 'Result 7', 'Result 8',
+            'Result 9', 'Result 10', 'Result 11',
+        ])
+        self.assertEqual([event['line'] for event in events], [1] + [2] * 12)
+
     def test_multi_block_event_ids_do_not_depend_on_selected_window(self):
         all_events, _ = self.collect_fixture("claude-code", "claude.jsonl")
         subset, _ = collector.collect([("claude-code", FIXTURES / "claude.jsonl")],
