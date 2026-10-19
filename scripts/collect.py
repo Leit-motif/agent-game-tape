@@ -833,5 +833,8 @@ def collect(inputs: list[tuple[str, Path]], start: datetime, end: datetime, *,
                         stats["event_limit_reached"] += 1
                         break
         stats["status"] = _status(stats)
-    events.sort(key=lambda event: (datetime.fromisoformat(event["timestamp"]), event["id"]))
+    # IDs identify records; their unpadded numeric suffixes are not chronology.
+    # Stable sorting retains emission order for multiple blocks on one line.
+    events.sort(key=lambda event: (datetime.fromisoformat(event["timestamp"]),
+                                   event["harness"], event["session"], event["line"]))
     return events, coverage

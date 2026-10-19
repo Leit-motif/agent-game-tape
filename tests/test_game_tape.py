@@ -4,6 +4,7 @@ import json
 import sys
 import tempfile
 import unittest
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
@@ -52,6 +53,35 @@ class ReviewChecks(unittest.TestCase):
         moment['evidence'] = [{'event': 'a-3', 'quote': self.bundle['events'][3]['text']}]
         moment['assurance'] = 'verified'
         self.assertEqual(tape.validate(self.bundle, self.review), [])
+
+    def test_collected_tied_timestamps_accept_only_subsequent_evidence(self):
+        # Public seam: actual JSONL -> collect() -> validate(), not a preordered bundle.
+        moment = self.review['moments'][0]
+        human = {'type': 'response_item', 'timestamp': '2030-04-10T09:00:00Z',
+                 'payload': {'type': 'message', 'role': 'user', 'content': moment['human_quote']}}
+        result = {'type': 'response_item', 'timestamp': '2030-04-10T09:00:00Z',
+                  'payload': {'type': 'function_call_output', 'output': moment['evidence'][0]['quote']}}
+        metadata = {'type': 'session_meta', 'payload': {'source': 'cli'}}
+        for human_first in (True, False):
+            with self.subTest(human_first=human_first), tempfile.TemporaryDirectory() as folder:
+                path = Path(folder) / 'synthetic.jsonl'
+                records = [metadata] * 8 + ([human, result] if human_first else [result, human])
+                path.write_text(''.join(json.dumps(row) + '\n' for row in records))
+                bundle, review = copy.deepcopy(self.bundle), copy.deepcopy(self.review)
+                bundle['events'], bundle['coverage'] = tape.collect(
+                    [('codex', path)], *(datetime.fromisoformat(t) for t in bundle['window']))
+                human_event = next(e for e in bundle['events'] if e['role'] == 'human')
+                tool_event = next(e for e in bundle['events'] if e['role'] == 'tool')
+                review['moments'] = review['moments'][:1]
+                review['moments'][0]['human_event'] = human_event['id']
+                review['moments'][0]['evidence'][0]['event'] = tool_event['id']
+                review['experiment']['moment_numbers'] = [1]
+                errors = tape.validate(bundle, review)
+                if human_first:
+                    self.assertEqual(errors, [])
+                else:
+                    self.assertTrue(any('subsequent' in error for error in errors), errors)
+                self.assertEqual([e['line'] for e in bundle['events']], [9, 10])
 
     def test_context_only_call_is_not_new_moment(self):
         self.bundle['events'][0]['in_window'] = False
