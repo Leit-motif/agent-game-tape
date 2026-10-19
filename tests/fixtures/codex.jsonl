@@ -1,0 +1,12 @@
+{"timestamp":"2026-10-19T09:00:00Z","type":"session_meta","payload":{"id":"12345678-aaaa-4000-8000-000000000001","source":"cli"}}
+{"timestamp":"2026-10-19T09:00:01Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"# AGENTS.md instructions for /synthetic/project\n\n<INSTRUCTIONS>\nInjected repository context.\n</INSTRUCTIONS>"}]}}
+{"timestamp":"2026-10-19T09:00:02Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"<environment_context>\nGenerated environment metadata.\n</environment_context>"}]}}
+{"timestamp":"2026-10-19T09:01:00Z","type":"event_msg","payload":{"type":"user_message","message":"Duplicate human stream"}}
+{"timestamp":"2026-10-19T09:01:00Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"# Actual user request\nUser instructions: keep this wording."}]}}
+{"timestamp":"2026-10-19T09:02:00Z","type":"response_item","payload":{"type":"message","role":"assistant","channel":"commentary","content":[{"type":"output_text","text":"Commentary is evidence, too."}]}}
+{"timestamp":"2026-10-19T09:03:00Z","type":"response_item","payload":{"type":"function_call","call_id":"codex-call-a","name":"read_file","arguments":"{\"path\":\"synthetic.txt\"}"}}
+{"timestamp":"2026-10-19T09:04:00Z","type":"response_item","payload":{"type":"function_call_output","call_id":"codex-call-a","output":"Read a synthetic fixture."}}
+{"timestamp":"2026-10-19T09:05:00Z","type":"response_item","payload":{"type":"custom_tool_call","call_id":"codex-call-b","name":"apply_patch","input":"*** Synthetic patch ***"}}
+{"timestamp":"2026-10-19T09:06:00Z","type":"response_item","payload":{"type":"custom_tool_call_output","call_id":"codex-call-b","output":{"ok":true}}}
+{"timestamp":"2026-10-19T09:07:00Z","type":"event_msg","payload":{"type":"agent_message","message":"Duplicate assistant stream"}}
+{"timestamp":"2026-10-19T09:07:00Z","type":"response_item","payload":{"type":"message","role":"assistant","channel":"final","content":"The synthetic boundary is verified."}}
