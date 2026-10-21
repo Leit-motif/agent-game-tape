@@ -1,0 +1,3793 @@
+[
+  {
+    "id": "a-base",
+    "kind": "synthetic-paraphrase",
+    "demo_case": "case-a",
+    "transcript": {
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.0,
+          "text": " Here's your game tape. First, your filter call, where you said,"
+        },
+        {
+          "start": 4.0,
+          "end": 9.09,
+          "text": " before changing the rest, show that the new filter preserves the failing example. The"
+        },
+        {
+          "start": 9.09,
+          "end": 12.36,
+          "text": " assistant ran the small regression first instead of rewriting"
+        },
+        {
+          "start": 12.36,
+          "end": 17.09,
+          "text": " the pipeline. It kept the original failing example intact, and twelve existing cases"
+        },
+        {
+          "start": 17.09,
+          "end": 22.54,
+          "text": " passed. And no rewrite was performed at all. The record doesn't measure how long a"
+        },
+        {
+          "start": 22.54,
+          "end": 26.18,
+          "text": " rewrite would take, so there's no measured time saving here."
+        },
+        {
+          "start": 26.18,
+          "end": 30.54,
+          "text": " Think of it like checking one leaky pipe before tearing out the"
+        },
+        {
+          "start": 30.54,
+          "end": 36.36,
+          "text": " kitchen. Make one concrete example your first checkpoint, and widen the work only if that check"
+        },
+        {
+          "start": 36.36,
+          "end": 40.36,
+          "text": " shows a need. The second moment is about publishing. At nine"
+        },
+        {
+          "start": 40.36,
+          "end": 45.09,
+          "text": " ten you said, yes, publish the page once the preview check passes. The"
+        },
+        {
+          "start": 45.09,
+          "end": 49.09,
+          "text": " assistant says it published after checking only that the page loads,"
+        },
+        {
+          "start": 49.09,
+          "end": 54.18,
+          "text": " and admits it skipped the motion preview you asked for. A later preview check"
+        },
+        {
+          "start": 54.18,
+          "end": 57.45,
+          "text": " found the motion missing, and a rollback finished at"
+        },
+        {
+          "start": 57.45,
+          "end": 62.18,
+          "text": " nine eighteen. So eight minutes passed between your conditional approval and the rollback"
+        },
+        {
+          "start": 62.18,
+          "end": 67.63,
+          "text": " record, an elapsed interval, not measured work or a proven outage. Visitor logs are unavailable,"
+        },
+        {
+          "start": 67.63,
+          "end": 71.27,
+          "text": " so we don't know whether any visitors saw the broken"
+        },
+        {
+          "start": 71.27,
+          "end": 75.63,
+          "text": " page. The record also doesn't say why the assistant skipped the preview."
+        },
+        {
+          "start": 75.63,
+          "end": 81.45,
+          "text": " You'd already supplied the condition, so the fix isn't for you to repeat it more forcefully."
+        },
+        {
+          "start": 81.45,
+          "end": 85.45,
+          "text": " It's like a pilot's checklist, where nobody takes off until every"
+        },
+        {
+          "start": 85.45,
+          "end": 90.18,
+          "text": " item is ticked. So here's the one experiment I'd propose for your next"
+        },
+        {
+          "start": 90.18,
+          "end": 94.18,
+          "text": " release. Have the assistant record a passing preview check before publication"
+        },
+        {
+          "start": 94.18,
+          "end": 99.27,
+          "text": " can go ahead. Then check the next release record for the preview result before"
+        },
+        {
+          "start": 99.27,
+          "end": 103.27,
+          "text": " the publication event, and keep the release blocked if it's missing."
+        }
+      ]
+    },
+    "expected": {
+      "decision": "accepted",
+      "opening_ok": true
+    },
+    "failures": [],
+    "supported": [
+      {
+        "id": "a-base-s1",
+        "quote": "First, your filter call, where you",
+        "note": "a-1, review:m1 human_quote"
+      },
+      {
+        "id": "a-base-s2",
+        "quote": "The assistant ran the small regression",
+        "note": "a-2, review:m1 action"
+      },
+      {
+        "id": "a-base-s3",
+        "quote": "It kept the original failing example",
+        "note": "a-3"
+      },
+      {
+        "id": "a-base-s4",
+        "quote": "And no rewrite was performed at",
+        "note": "a-3 'No rewrite performed'"
+      },
+      {
+        "id": "a-base-s5",
+        "quote": "The record doesn't measure how long",
+        "note": "review:m1 outcome caveat (no counterfactual measured)"
+      },
+      {
+        "id": "a-base-s6",
+        "quote": "Think of it like checking one",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "a-base-s7",
+        "quote": "Make one concrete example your first",
+        "note": "non-factual: advice, review:m1 lesson"
+      },
+      {
+        "id": "a-base-s8",
+        "quote": "The second moment is about publishing",
+        "note": "non-factual: connective tissue introducing moment 2"
+      },
+      {
+        "id": "a-base-s9",
+        "quote": "At nine ten you said, yes",
+        "note": "a-4 at 09:10"
+      },
+      {
+        "id": "a-base-s10",
+        "quote": "The assistant says it published after",
+        "note": "a-5, review:m2 action"
+      },
+      {
+        "id": "a-base-s11",
+        "quote": "A later preview check found the",
+        "note": "a-6"
+      },
+      {
+        "id": "a-base-s12",
+        "quote": "So eight minutes passed between your",
+        "note": "review:m2 outcome; 09:10 to 09:18"
+      },
+      {
+        "id": "a-base-s13",
+        "quote": "Visitor logs are unavailable, so we",
+        "note": "a-6 'Visitor logs: unavailable', review:m2 outcome"
+      },
+      {
+        "id": "a-base-s14",
+        "quote": "The record also doesn't say why",
+        "note": "review:m2 causal_basis"
+      },
+      {
+        "id": "a-base-s15",
+        "quote": "You'd already supplied the condition, so",
+        "note": "review:m2 lesson, responsibility agent"
+      },
+      {
+        "id": "a-base-s16",
+        "quote": "It's like a pilot's checklist, where",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "a-base-s17",
+        "quote": "So here's the one experiment I'd",
+        "note": "non-factual: experiment framing"
+      },
+      {
+        "id": "a-base-s18",
+        "quote": "Have the assistant record a passing",
+        "note": "review:experiment change (proposal)"
+      },
+      {
+        "id": "a-base-s19",
+        "quote": "Then check the next release record",
+        "note": "review:experiment next_check (proposal)"
+      }
+    ]
+  },
+  {
+    "id": "b-base",
+    "kind": "synthetic-paraphrase",
+    "demo_case": "case-b",
+    "transcript": {
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.0,
+          "text": " Here's your game tape. First, let's look at your latency call,"
+        },
+        {
+          "start": 4.0,
+          "end": 9.09,
+          "text": " where you said, skip the cache experiment for now, first check the slower request"
+        },
+        {
+          "start": 9.09,
+          "end": 12.36,
+          "text": " from the phone. The assistant followed that newer instruction"
+        },
+        {
+          "start": 12.36,
+          "end": 17.09,
+          "text": " and measured the phone request instead of the cache idea. The tool logged"
+        },
+        {
+          "start": 17.09,
+          "end": 22.54,
+          "text": " 4.2 seconds end to end on the phone and 0.3 seconds for the local handler"
+        },
+        {
+          "start": 22.54,
+          "end": 26.18,
+          "text": " alone. Those numbers have different measurement boundaries, so they aren't"
+        },
+        {
+          "start": 26.18,
+          "end": 30.54,
+          "text": " like-for-like. And with no component-level network trace, the record can't say which"
+        },
+        {
+          "start": 30.54,
+          "end": 36.36,
+          "text": " part accounts for the gap, or whether a cache would help at all. It's like timing"
+        },
+        {
+          "start": 36.36,
+          "end": 40.36,
+          "text": " a commute door to door and comparing it with the elevator"
+        },
+        {
+          "start": 40.36,
+          "end": 45.09,
+          "text": " ride. The useful move was sorting out the measurement before optimizing any one"
+        },
+        {
+          "start": 45.09,
+          "end": 49.09,
+          "text": " piece, and judging later work against your updated instruction. The second"
+        },
+        {
+          "start": 49.09,
+          "end": 54.18,
+          "text": " moment is about shipping. You said, ship only after the end-to-end phone check is"
+        },
+        {
+          "start": 54.18,
+          "end": 57.45,
+          "text": " in the release record. The assistant reported that it"
+        },
+        {
+          "start": 57.45,
+          "end": 62.18,
+          "text": " committed the patch and restarted the service, and said plainly it hadn't checked"
+        },
+        {
+          "start": 62.18,
+          "end": 67.63,
+          "text": " the phone afterward. The tool confirms the commit and shows no post-restart phone check on"
+        },
+        {
+          "start": 67.63,
+          "end": 71.27,
+          "text": " record. So the commit is confirmed, but the restart is"
+        },
+        {
+          "start": 71.27,
+          "end": 75.63,
+          "text": " only the assistant's report. We don't know whether the service works on"
+        },
+        {
+          "start": 75.63,
+          "end": 81.45,
+          "text": " your phone, so the record shows neither a successful nor a failed deployment. The record also"
+        },
+        {
+          "start": 81.45,
+          "end": 85.45,
+          "text": " doesn't say why the phone check didn't happen. Think of a"
+        },
+        {
+          "start": 85.45,
+          "end": 90.18,
+          "text": " shipping receipt versus actually seeing the package on your doorstep. Your release condition"
+        },
+        {
+          "start": 90.18,
+          "end": 94.18,
+          "text": " is still outstanding, and a missing check doesn't tell you whether"
+        },
+        {
+          "start": 94.18,
+          "end": 99.27,
+          "text": " the patch works. So here's the one experiment I'd suggest for your next patch"
+        },
+        {
+          "start": 99.27,
+          "end": 102.54,
+          "text": " review. Keep the commit receipt and the post-restart phone"
+        },
+        {
+          "start": 102.54,
+          "end": 107.27,
+          "text": " result as two separate acceptance checks. Then confirm both receipts are there before"
+        },
+        {
+          "start": 107.27,
+          "end": 112.36,
+          "text": " marking the running experience accepted, and keep the status unknown if either is missing."
+        }
+      ]
+    },
+    "expected": {
+      "decision": "accepted",
+      "opening_ok": true
+    },
+    "failures": [],
+    "supported": [
+      {
+        "id": "b-base-s1",
+        "quote": "First, let's look at your latency",
+        "note": "b-1, review:m1 human_quote"
+      },
+      {
+        "id": "b-base-s2",
+        "quote": "The assistant followed that newer instruction",
+        "note": "b-2, review:m1 action"
+      },
+      {
+        "id": "b-base-s3",
+        "quote": "The tool logged 4.2 seconds end",
+        "note": "b-3"
+      },
+      {
+        "id": "b-base-s4",
+        "quote": "Those numbers have different measurement boundaries",
+        "note": "review:m1 outcome"
+      },
+      {
+        "id": "b-base-s5",
+        "quote": "And with no component-level network trace",
+        "note": "b-3 'No component-level network trace captured', review:m1 outcome"
+      },
+      {
+        "id": "b-base-s6",
+        "quote": "It's like timing a commute door",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "b-base-s7",
+        "quote": "The useful move was sorting out",
+        "note": "non-factual: advice, review:m1 lesson"
+      },
+      {
+        "id": "b-base-s8",
+        "quote": "The second moment is about shipping",
+        "note": "non-factual: connective tissue introducing moment 2"
+      },
+      {
+        "id": "b-base-s9",
+        "quote": "You said, ship only after the",
+        "note": "b-4"
+      },
+      {
+        "id": "b-base-s10",
+        "quote": "The assistant reported that it committed",
+        "note": "b-5 (restart attributed as report)"
+      },
+      {
+        "id": "b-base-s11",
+        "quote": "The tool confirms the commit and",
+        "note": "b-6"
+      },
+      {
+        "id": "b-base-s12",
+        "quote": "So the commit is confirmed, but",
+        "note": "review:m2 outcome"
+      },
+      {
+        "id": "b-base-s13",
+        "quote": "We don't know whether the service",
+        "note": "review:m2 outcome, causal_basis"
+      },
+      {
+        "id": "b-base-s14",
+        "quote": "The record also doesn't say why",
+        "note": "review:m2 causal_basis (cause unknown)"
+      },
+      {
+        "id": "b-base-s15",
+        "quote": "Think of a shipping receipt versus",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "b-base-s16",
+        "quote": "Your release condition is still outstanding",
+        "note": "review:m2 lesson"
+      },
+      {
+        "id": "b-base-s17",
+        "quote": "So here's the one experiment I'd",
+        "note": "non-factual: experiment framing"
+      },
+      {
+        "id": "b-base-s18",
+        "quote": "Keep the commit receipt and the",
+        "note": "review:experiment change (proposal)"
+      },
+      {
+        "id": "b-base-s19",
+        "quote": "Then confirm both receipts are there",
+        "note": "review:experiment next_check (proposal)"
+      }
+    ]
+  },
+  {
+    "id": "a-unmeasured-as-measured",
+    "kind": "synthetic-perturbation",
+    "demo_case": "case-a",
+    "transcript": {
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.0,
+          "text": " Here's your game tape. First, your filter call, where you said,"
+        },
+        {
+          "start": 4.0,
+          "end": 9.09,
+          "text": " before changing the rest, show that the new filter preserves the failing example. The"
+        },
+        {
+          "start": 9.09,
+          "end": 12.36,
+          "text": " assistant ran the small regression first instead of rewriting"
+        },
+        {
+          "start": 12.36,
+          "end": 17.09,
+          "text": " the pipeline. It kept the original failing example intact, and twelve existing cases"
+        },
+        {
+          "start": 17.09,
+          "end": 22.54,
+          "text": " passed. And no rewrite was performed at all. That one check spared you the better"
+        },
+        {
+          "start": 22.54,
+          "end": 26.18,
+          "text": " part of an hour that a pipeline rewrite would have"
+        },
+        {
+          "start": 26.18,
+          "end": 30.54,
+          "text": " eaten. Think of it like checking one leaky pipe before tearing out"
+        },
+        {
+          "start": 30.54,
+          "end": 36.36,
+          "text": " the kitchen. Make one concrete example your first checkpoint, and widen the work only if that"
+        },
+        {
+          "start": 36.36,
+          "end": 40.36,
+          "text": " check shows a need. The second moment is about publishing. At"
+        },
+        {
+          "start": 40.36,
+          "end": 45.09,
+          "text": " nine ten you said, yes, publish the page once the preview check passes."
+        },
+        {
+          "start": 45.09,
+          "end": 49.09,
+          "text": " The assistant says it published after checking only that the page"
+        },
+        {
+          "start": 49.09,
+          "end": 54.18,
+          "text": " loads, and admits it skipped the motion preview you asked for. A later preview"
+        },
+        {
+          "start": 54.18,
+          "end": 57.45,
+          "text": " check found the motion missing, and a rollback finished"
+        },
+        {
+          "start": 57.45,
+          "end": 62.18,
+          "text": " at nine eighteen. So eight minutes passed between your conditional approval and the"
+        },
+        {
+          "start": 62.18,
+          "end": 67.63,
+          "text": " rollback record, an elapsed interval, not measured work or a proven outage. Visitor logs are"
+        },
+        {
+          "start": 67.63,
+          "end": 71.27,
+          "text": " unavailable, so we don't know whether any visitors saw the"
+        },
+        {
+          "start": 71.27,
+          "end": 75.63,
+          "text": " broken page. The record also doesn't say why the assistant skipped the"
+        },
+        {
+          "start": 75.63,
+          "end": 81.45,
+          "text": " preview. You'd already supplied the condition, so the fix isn't for you to repeat it more"
+        },
+        {
+          "start": 81.45,
+          "end": 85.45,
+          "text": " forcefully. It's like a pilot's checklist, where nobody takes off until"
+        },
+        {
+          "start": 85.45,
+          "end": 90.18,
+          "text": " every item is ticked. So here's the one experiment I'd propose for your"
+        },
+        {
+          "start": 90.18,
+          "end": 94.18,
+          "text": " next release. Have the assistant record a passing preview check before"
+        },
+        {
+          "start": 94.18,
+          "end": 99.27,
+          "text": " publication can go ahead. Then check the next release record for the preview result"
+        },
+        {
+          "start": 99.27,
+          "end": 103.63,
+          "text": " before the publication event, and keep the release blocked if it's missing."
+        }
+      ]
+    },
+    "expected": {
+      "decision": "rejected",
+      "opening_ok": true
+    },
+    "failures": [
+      {
+        "id": "a-unmeasured-as-measured-f1",
+        "quote": "spared you the better part of an hour",
+        "expected_type": "unmeasured_as_measured",
+        "note": "No counterfactual rewrite duration or time saving was measured (a-3, review:m1 outcome); the sentence asserts a quantified saving."
+      }
+    ],
+    "supported": [
+      {
+        "id": "a-unmeasured-as-measured-s1",
+        "quote": "First, your filter call, where you",
+        "note": "a-1, review:m1 human_quote"
+      },
+      {
+        "id": "a-unmeasured-as-measured-s2",
+        "quote": "The assistant ran the small regression",
+        "note": "a-2, review:m1 action"
+      },
+      {
+        "id": "a-unmeasured-as-measured-s3",
+        "quote": "It kept the original failing example",
+        "note": "a-3"
+      },
+      {
+        "id": "a-unmeasured-as-measured-s4",
+        "quote": "And no rewrite was performed at",
+        "note": "a-3 'No rewrite performed'"
+      },
+      {
+        "id": "a-unmeasured-as-measured-s5",
+        "quote": "Think of it like checking one",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "a-unmeasured-as-measured-s6",
+        "quote": "Make one concrete example your first",
+        "note": "non-factual: advice, review:m1 lesson"
+      },
+      {
+        "id": "a-unmeasured-as-measured-s7",
+        "quote": "The second moment is about publishing",
+        "note": "non-factual: connective tissue introducing moment 2"
+      },
+      {
+        "id": "a-unmeasured-as-measured-s8",
+        "quote": "At nine ten you said, yes",
+        "note": "a-4 at 09:10"
+      },
+      {
+        "id": "a-unmeasured-as-measured-s9",
+        "quote": "The assistant says it published after",
+        "note": "a-5, review:m2 action"
+      },
+      {
+        "id": "a-unmeasured-as-measured-s10",
+        "quote": "A later preview check found the",
+        "note": "a-6"
+      },
+      {
+        "id": "a-unmeasured-as-measured-s11",
+        "quote": "So eight minutes passed between your",
+        "note": "review:m2 outcome; 09:10 to 09:18"
+      },
+      {
+        "id": "a-unmeasured-as-measured-s12",
+        "quote": "Visitor logs are unavailable, so we",
+        "note": "a-6 'Visitor logs: unavailable', review:m2 outcome"
+      },
+      {
+        "id": "a-unmeasured-as-measured-s13",
+        "quote": "The record also doesn't say why",
+        "note": "review:m2 causal_basis"
+      },
+      {
+        "id": "a-unmeasured-as-measured-s14",
+        "quote": "You'd already supplied the condition, so",
+        "note": "review:m2 lesson, responsibility agent"
+      },
+      {
+        "id": "a-unmeasured-as-measured-s15",
+        "quote": "It's like a pilot's checklist, where",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "a-unmeasured-as-measured-s16",
+        "quote": "So here's the one experiment I'd",
+        "note": "non-factual: experiment framing"
+      },
+      {
+        "id": "a-unmeasured-as-measured-s17",
+        "quote": "Have the assistant record a passing",
+        "note": "review:experiment change (proposal)"
+      },
+      {
+        "id": "a-unmeasured-as-measured-s18",
+        "quote": "Then check the next release record",
+        "note": "review:experiment next_check (proposal)"
+      }
+    ]
+  },
+  {
+    "id": "a-absent-cost-as-zero",
+    "kind": "synthetic-perturbation",
+    "demo_case": "case-a",
+    "transcript": {
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.0,
+          "text": " Here's your game tape. First, your filter call, where you said,"
+        },
+        {
+          "start": 4.0,
+          "end": 9.09,
+          "text": " before changing the rest, show that the new filter preserves the failing example. The"
+        },
+        {
+          "start": 9.09,
+          "end": 12.36,
+          "text": " assistant ran the small regression first instead of rewriting"
+        },
+        {
+          "start": 12.36,
+          "end": 17.09,
+          "text": " the pipeline. It kept the original failing example intact, and twelve existing cases"
+        },
+        {
+          "start": 17.09,
+          "end": 22.54,
+          "text": " passed. And no rewrite was performed at all. The record doesn't measure how long a"
+        },
+        {
+          "start": 22.54,
+          "end": 26.18,
+          "text": " rewrite would take, so there's no measured time saving here."
+        },
+        {
+          "start": 26.18,
+          "end": 30.54,
+          "text": " Think of it like checking one leaky pipe before tearing out the"
+        },
+        {
+          "start": 30.54,
+          "end": 36.36,
+          "text": " kitchen. Make one concrete example your first checkpoint, and widen the work only if that check"
+        },
+        {
+          "start": 36.36,
+          "end": 40.36,
+          "text": " shows a need. The second moment is about publishing. At nine"
+        },
+        {
+          "start": 40.36,
+          "end": 45.09,
+          "text": " ten you said, yes, publish the page once the preview check passes. The"
+        },
+        {
+          "start": 45.09,
+          "end": 49.09,
+          "text": " assistant says it published after checking only that the page loads,"
+        },
+        {
+          "start": 49.09,
+          "end": 54.18,
+          "text": " and admits it skipped the motion preview you asked for. A later preview check"
+        },
+        {
+          "start": 54.18,
+          "end": 57.45,
+          "text": " found the motion missing, and a rollback finished at"
+        },
+        {
+          "start": 57.45,
+          "end": 62.18,
+          "text": " nine eighteen. So eight minutes passed between your conditional approval and the rollback"
+        },
+        {
+          "start": 62.18,
+          "end": 67.63,
+          "text": " record, an elapsed interval, not measured work or a proven outage. Nothing in the record"
+        },
+        {
+          "start": 67.63,
+          "end": 71.27,
+          "text": " shows a visitor hitting the broken page, so the slip"
+        },
+        {
+          "start": 71.27,
+          "end": 75.63,
+          "text": " didn't cost you any visitors. The record also doesn't say why the"
+        },
+        {
+          "start": 75.63,
+          "end": 81.45,
+          "text": " assistant skipped the preview. You'd already supplied the condition, so the fix isn't for you to"
+        },
+        {
+          "start": 81.45,
+          "end": 85.45,
+          "text": " repeat it more forcefully. It's like a pilot's checklist, where nobody"
+        },
+        {
+          "start": 85.45,
+          "end": 90.18,
+          "text": " takes off until every item is ticked. So here's the one experiment I'd"
+        },
+        {
+          "start": 90.18,
+          "end": 94.18,
+          "text": " propose for your next release. Have the assistant record a passing"
+        },
+        {
+          "start": 94.18,
+          "end": 99.27,
+          "text": " preview check before publication can go ahead. Then check the next release record for"
+        },
+        {
+          "start": 99.27,
+          "end": 104.72,
+          "text": " the preview result before the publication event, and keep the release blocked if it's missing."
+        }
+      ]
+    },
+    "expected": {
+      "decision": "rejected",
+      "opening_ok": true
+    },
+    "failures": [
+      {
+        "id": "a-absent-cost-as-zero-f1",
+        "quote": "didn't cost you any visitors",
+        "expected_type": "absent_cost_as_zero",
+        "note": "Visitor logs are unavailable (a-6); absence of evidence of visitor exposure is turned into zero visitor cost."
+      }
+    ],
+    "supported": [
+      {
+        "id": "a-absent-cost-as-zero-s1",
+        "quote": "First, your filter call, where you",
+        "note": "a-1, review:m1 human_quote"
+      },
+      {
+        "id": "a-absent-cost-as-zero-s2",
+        "quote": "The assistant ran the small regression",
+        "note": "a-2, review:m1 action"
+      },
+      {
+        "id": "a-absent-cost-as-zero-s3",
+        "quote": "It kept the original failing example",
+        "note": "a-3"
+      },
+      {
+        "id": "a-absent-cost-as-zero-s4",
+        "quote": "And no rewrite was performed at",
+        "note": "a-3 'No rewrite performed'"
+      },
+      {
+        "id": "a-absent-cost-as-zero-s5",
+        "quote": "The record doesn't measure how long",
+        "note": "review:m1 outcome caveat (no counterfactual measured)"
+      },
+      {
+        "id": "a-absent-cost-as-zero-s6",
+        "quote": "Think of it like checking one",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "a-absent-cost-as-zero-s7",
+        "quote": "Make one concrete example your first",
+        "note": "non-factual: advice, review:m1 lesson"
+      },
+      {
+        "id": "a-absent-cost-as-zero-s8",
+        "quote": "The second moment is about publishing",
+        "note": "non-factual: connective tissue introducing moment 2"
+      },
+      {
+        "id": "a-absent-cost-as-zero-s9",
+        "quote": "At nine ten you said, yes",
+        "note": "a-4 at 09:10"
+      },
+      {
+        "id": "a-absent-cost-as-zero-s10",
+        "quote": "The assistant says it published after",
+        "note": "a-5, review:m2 action"
+      },
+      {
+        "id": "a-absent-cost-as-zero-s11",
+        "quote": "A later preview check found the",
+        "note": "a-6"
+      },
+      {
+        "id": "a-absent-cost-as-zero-s12",
+        "quote": "So eight minutes passed between your",
+        "note": "review:m2 outcome; 09:10 to 09:18"
+      },
+      {
+        "id": "a-absent-cost-as-zero-s13",
+        "quote": "The record also doesn't say why",
+        "note": "review:m2 causal_basis"
+      },
+      {
+        "id": "a-absent-cost-as-zero-s14",
+        "quote": "You'd already supplied the condition, so",
+        "note": "review:m2 lesson, responsibility agent"
+      },
+      {
+        "id": "a-absent-cost-as-zero-s15",
+        "quote": "It's like a pilot's checklist, where",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "a-absent-cost-as-zero-s16",
+        "quote": "So here's the one experiment I'd",
+        "note": "non-factual: experiment framing"
+      },
+      {
+        "id": "a-absent-cost-as-zero-s17",
+        "quote": "Have the assistant record a passing",
+        "note": "review:experiment change (proposal)"
+      },
+      {
+        "id": "a-absent-cost-as-zero-s18",
+        "quote": "Then check the next release record",
+        "note": "review:experiment next_check (proposal)"
+      }
+    ]
+  },
+  {
+    "id": "a-interval-as-labor",
+    "kind": "synthetic-perturbation",
+    "demo_case": "case-a",
+    "transcript": {
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.0,
+          "text": " Here's your game tape. First, your filter call, where you said,"
+        },
+        {
+          "start": 4.0,
+          "end": 9.09,
+          "text": " before changing the rest, show that the new filter preserves the failing example. The"
+        },
+        {
+          "start": 9.09,
+          "end": 12.36,
+          "text": " assistant ran the small regression first instead of rewriting"
+        },
+        {
+          "start": 12.36,
+          "end": 17.09,
+          "text": " the pipeline. It kept the original failing example intact, and twelve existing cases"
+        },
+        {
+          "start": 17.09,
+          "end": 22.54,
+          "text": " passed. And no rewrite was performed at all. The record doesn't measure how long a"
+        },
+        {
+          "start": 22.54,
+          "end": 26.18,
+          "text": " rewrite would take, so there's no measured time saving here."
+        },
+        {
+          "start": 26.18,
+          "end": 30.54,
+          "text": " Think of it like checking one leaky pipe before tearing out the"
+        },
+        {
+          "start": 30.54,
+          "end": 36.36,
+          "text": " kitchen. Make one concrete example your first checkpoint, and widen the work only if that check"
+        },
+        {
+          "start": 36.36,
+          "end": 40.36,
+          "text": " shows a need. The second moment is about publishing. At nine"
+        },
+        {
+          "start": 40.36,
+          "end": 45.09,
+          "text": " ten you said, yes, publish the page once the preview check passes. The"
+        },
+        {
+          "start": 45.09,
+          "end": 49.09,
+          "text": " assistant says it published after checking only that the page loads,"
+        },
+        {
+          "start": 49.09,
+          "end": 54.18,
+          "text": " and admits it skipped the motion preview you asked for. A later preview check"
+        },
+        {
+          "start": 54.18,
+          "end": 57.45,
+          "text": " found the motion missing, and a rollback finished at"
+        },
+        {
+          "start": 57.45,
+          "end": 62.18,
+          "text": " nine eighteen. So the broken page stayed live for a full eight minutes,"
+        },
+        {
+          "start": 62.18,
+          "end": 67.63,
+          "text": " right up until the rollback record. Visitor logs are unavailable, so we don't know whether"
+        },
+        {
+          "start": 67.63,
+          "end": 71.27,
+          "text": " any visitors saw the broken page. The record also doesn't"
+        },
+        {
+          "start": 71.27,
+          "end": 75.63,
+          "text": " say why the assistant skipped the preview. You'd already supplied the condition,"
+        },
+        {
+          "start": 75.63,
+          "end": 81.45,
+          "text": " so the fix isn't for you to repeat it more forcefully. It's like a pilot's checklist,"
+        },
+        {
+          "start": 81.45,
+          "end": 85.45,
+          "text": " where nobody takes off until every item is ticked. So here's"
+        },
+        {
+          "start": 85.45,
+          "end": 90.18,
+          "text": " the one experiment I'd propose for your next release. Have the assistant record"
+        },
+        {
+          "start": 90.18,
+          "end": 94.18,
+          "text": " a passing preview check before publication can go ahead. Then check"
+        },
+        {
+          "start": 94.18,
+          "end": 97.82,
+          "text": " the next release record for the preview result before the"
+        },
+        {
+          "start": 97.82,
+          "end": 101.46,
+          "text": " publication event, and keep the release blocked if it's missing."
+        }
+      ]
+    },
+    "expected": {
+      "decision": "rejected",
+      "opening_ok": true
+    },
+    "failures": [
+      {
+        "id": "a-interval-as-labor-f1",
+        "quote": "stayed live for a full eight minutes",
+        "expected_type": "interval_as_labor",
+        "note": "Eight minutes is the 09:10 condition to 09:18 rollback record interval; publication came later and exposure is unknown, so it is not a continuous outage."
+      }
+    ],
+    "supported": [
+      {
+        "id": "a-interval-as-labor-s1",
+        "quote": "First, your filter call, where you",
+        "note": "a-1, review:m1 human_quote"
+      },
+      {
+        "id": "a-interval-as-labor-s2",
+        "quote": "The assistant ran the small regression",
+        "note": "a-2, review:m1 action"
+      },
+      {
+        "id": "a-interval-as-labor-s3",
+        "quote": "It kept the original failing example",
+        "note": "a-3"
+      },
+      {
+        "id": "a-interval-as-labor-s4",
+        "quote": "And no rewrite was performed at",
+        "note": "a-3 'No rewrite performed'"
+      },
+      {
+        "id": "a-interval-as-labor-s5",
+        "quote": "The record doesn't measure how long",
+        "note": "review:m1 outcome caveat (no counterfactual measured)"
+      },
+      {
+        "id": "a-interval-as-labor-s6",
+        "quote": "Think of it like checking one",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "a-interval-as-labor-s7",
+        "quote": "Make one concrete example your first",
+        "note": "non-factual: advice, review:m1 lesson"
+      },
+      {
+        "id": "a-interval-as-labor-s8",
+        "quote": "The second moment is about publishing",
+        "note": "non-factual: connective tissue introducing moment 2"
+      },
+      {
+        "id": "a-interval-as-labor-s9",
+        "quote": "At nine ten you said, yes",
+        "note": "a-4 at 09:10"
+      },
+      {
+        "id": "a-interval-as-labor-s10",
+        "quote": "The assistant says it published after",
+        "note": "a-5, review:m2 action"
+      },
+      {
+        "id": "a-interval-as-labor-s11",
+        "quote": "A later preview check found the",
+        "note": "a-6"
+      },
+      {
+        "id": "a-interval-as-labor-s12",
+        "quote": "Visitor logs are unavailable, so we",
+        "note": "a-6 'Visitor logs: unavailable', review:m2 outcome"
+      },
+      {
+        "id": "a-interval-as-labor-s13",
+        "quote": "The record also doesn't say why",
+        "note": "review:m2 causal_basis"
+      },
+      {
+        "id": "a-interval-as-labor-s14",
+        "quote": "You'd already supplied the condition, so",
+        "note": "review:m2 lesson, responsibility agent"
+      },
+      {
+        "id": "a-interval-as-labor-s15",
+        "quote": "It's like a pilot's checklist, where",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "a-interval-as-labor-s16",
+        "quote": "So here's the one experiment I'd",
+        "note": "non-factual: experiment framing"
+      },
+      {
+        "id": "a-interval-as-labor-s17",
+        "quote": "Have the assistant record a passing",
+        "note": "review:experiment change (proposal)"
+      },
+      {
+        "id": "a-interval-as-labor-s18",
+        "quote": "Then check the next release record",
+        "note": "review:experiment next_check (proposal)"
+      }
+    ]
+  },
+  {
+    "id": "a-invented-internals",
+    "kind": "synthetic-perturbation",
+    "demo_case": "case-a",
+    "transcript": {
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.0,
+          "text": " Here's your game tape. First, your filter call, where you said,"
+        },
+        {
+          "start": 4.0,
+          "end": 9.09,
+          "text": " before changing the rest, show that the new filter preserves the failing example. The"
+        },
+        {
+          "start": 9.09,
+          "end": 12.36,
+          "text": " assistant ran the small regression first instead of rewriting"
+        },
+        {
+          "start": 12.36,
+          "end": 17.09,
+          "text": " the pipeline. It kept the original failing example intact, and twelve existing cases"
+        },
+        {
+          "start": 17.09,
+          "end": 22.54,
+          "text": " passed. And no rewrite was performed at all. The record doesn't measure how long a"
+        },
+        {
+          "start": 22.54,
+          "end": 26.18,
+          "text": " rewrite would take, so there's no measured time saving here."
+        },
+        {
+          "start": 26.18,
+          "end": 30.54,
+          "text": " Think of it like checking one leaky pipe before tearing out the"
+        },
+        {
+          "start": 30.54,
+          "end": 36.36,
+          "text": " kitchen. Make one concrete example your first checkpoint, and widen the work only if that check"
+        },
+        {
+          "start": 36.36,
+          "end": 40.36,
+          "text": " shows a need. The second moment is about publishing. At nine"
+        },
+        {
+          "start": 40.36,
+          "end": 45.09,
+          "text": " ten you said, yes, publish the page once the preview check passes. The"
+        },
+        {
+          "start": 45.09,
+          "end": 49.09,
+          "text": " assistant says it published after checking only that the page loads,"
+        },
+        {
+          "start": 49.09,
+          "end": 54.18,
+          "text": " and admits it skipped the motion preview you asked for. A later preview check"
+        },
+        {
+          "start": 54.18,
+          "end": 57.45,
+          "text": " found the motion missing, and a rollback finished at"
+        },
+        {
+          "start": 57.45,
+          "end": 62.18,
+          "text": " nine eighteen. So eight minutes passed between your conditional approval and the rollback"
+        },
+        {
+          "start": 62.18,
+          "end": 67.63,
+          "text": " record, an elapsed interval, not measured work or a proven outage. Visitor logs are unavailable,"
+        },
+        {
+          "start": 67.63,
+          "end": 71.27,
+          "text": " so we don't know whether any visitors saw the broken"
+        },
+        {
+          "start": 71.27,
+          "end": 75.63,
+          "text": " page. The assistant's context had drifted past your condition by the time"
+        },
+        {
+          "start": 75.63,
+          "end": 81.45,
+          "text": " it published, so the preview simply fell out of view. You'd already supplied the condition, so"
+        },
+        {
+          "start": 81.45,
+          "end": 85.45,
+          "text": " the fix isn't for you to repeat it more forcefully. It's"
+        },
+        {
+          "start": 85.45,
+          "end": 90.18,
+          "text": " like a pilot's checklist, where nobody takes off until every item is ticked."
+        },
+        {
+          "start": 90.18,
+          "end": 94.18,
+          "text": " So here's the one experiment I'd propose for your next release."
+        },
+        {
+          "start": 94.18,
+          "end": 99.27,
+          "text": " Have the assistant record a passing preview check before publication can go ahead. Then"
+        },
+        {
+          "start": 99.27,
+          "end": 102.54,
+          "text": " check the next release record for the preview result"
+        },
+        {
+          "start": 102.54,
+          "end": 106.9,
+          "text": " before the publication event, and keep the release blocked if it's missing."
+        }
+      ]
+    },
+    "expected": {
+      "decision": "rejected",
+      "opening_ok": true
+    },
+    "failures": [
+      {
+        "id": "a-invented-internals-f1",
+        "quote": "context had drifted past your condition",
+        "expected_type": "invented_internals",
+        "note": "The record does not explain why the preview was skipped (review:m2 causal_basis); this invents a model-internal cause."
+      }
+    ],
+    "supported": [
+      {
+        "id": "a-invented-internals-s1",
+        "quote": "First, your filter call, where you",
+        "note": "a-1, review:m1 human_quote"
+      },
+      {
+        "id": "a-invented-internals-s2",
+        "quote": "The assistant ran the small regression",
+        "note": "a-2, review:m1 action"
+      },
+      {
+        "id": "a-invented-internals-s3",
+        "quote": "It kept the original failing example",
+        "note": "a-3"
+      },
+      {
+        "id": "a-invented-internals-s4",
+        "quote": "And no rewrite was performed at",
+        "note": "a-3 'No rewrite performed'"
+      },
+      {
+        "id": "a-invented-internals-s5",
+        "quote": "The record doesn't measure how long",
+        "note": "review:m1 outcome caveat (no counterfactual measured)"
+      },
+      {
+        "id": "a-invented-internals-s6",
+        "quote": "Think of it like checking one",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "a-invented-internals-s7",
+        "quote": "Make one concrete example your first",
+        "note": "non-factual: advice, review:m1 lesson"
+      },
+      {
+        "id": "a-invented-internals-s8",
+        "quote": "The second moment is about publishing",
+        "note": "non-factual: connective tissue introducing moment 2"
+      },
+      {
+        "id": "a-invented-internals-s9",
+        "quote": "At nine ten you said, yes",
+        "note": "a-4 at 09:10"
+      },
+      {
+        "id": "a-invented-internals-s10",
+        "quote": "The assistant says it published after",
+        "note": "a-5, review:m2 action"
+      },
+      {
+        "id": "a-invented-internals-s11",
+        "quote": "A later preview check found the",
+        "note": "a-6"
+      },
+      {
+        "id": "a-invented-internals-s12",
+        "quote": "So eight minutes passed between your",
+        "note": "review:m2 outcome; 09:10 to 09:18"
+      },
+      {
+        "id": "a-invented-internals-s13",
+        "quote": "Visitor logs are unavailable, so we",
+        "note": "a-6 'Visitor logs: unavailable', review:m2 outcome"
+      },
+      {
+        "id": "a-invented-internals-s14",
+        "quote": "You'd already supplied the condition, so",
+        "note": "review:m2 lesson, responsibility agent"
+      },
+      {
+        "id": "a-invented-internals-s15",
+        "quote": "It's like a pilot's checklist, where",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "a-invented-internals-s16",
+        "quote": "So here's the one experiment I'd",
+        "note": "non-factual: experiment framing"
+      },
+      {
+        "id": "a-invented-internals-s17",
+        "quote": "Have the assistant record a passing",
+        "note": "review:experiment change (proposal)"
+      },
+      {
+        "id": "a-invented-internals-s18",
+        "quote": "Then check the next release record",
+        "note": "review:experiment next_check (proposal)"
+      }
+    ]
+  },
+  {
+    "id": "a-blame-shift",
+    "kind": "synthetic-perturbation",
+    "demo_case": "case-a",
+    "transcript": {
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.0,
+          "text": " Here's your game tape. First, your filter call, where you said,"
+        },
+        {
+          "start": 4.0,
+          "end": 9.09,
+          "text": " before changing the rest, show that the new filter preserves the failing example. The"
+        },
+        {
+          "start": 9.09,
+          "end": 12.36,
+          "text": " assistant ran the small regression first instead of rewriting"
+        },
+        {
+          "start": 12.36,
+          "end": 17.09,
+          "text": " the pipeline. It kept the original failing example intact, and twelve existing cases"
+        },
+        {
+          "start": 17.09,
+          "end": 22.54,
+          "text": " passed. And no rewrite was performed at all. The record doesn't measure how long a"
+        },
+        {
+          "start": 22.54,
+          "end": 26.18,
+          "text": " rewrite would take, so there's no measured time saving here."
+        },
+        {
+          "start": 26.18,
+          "end": 30.54,
+          "text": " Think of it like checking one leaky pipe before tearing out the"
+        },
+        {
+          "start": 30.54,
+          "end": 36.36,
+          "text": " kitchen. Make one concrete example your first checkpoint, and widen the work only if that check"
+        },
+        {
+          "start": 36.36,
+          "end": 40.36,
+          "text": " shows a need. The second moment is about publishing. At nine"
+        },
+        {
+          "start": 40.36,
+          "end": 45.09,
+          "text": " ten you said, yes, publish the page once the preview check passes. The"
+        },
+        {
+          "start": 45.09,
+          "end": 49.09,
+          "text": " assistant says it published after checking only that the page loads,"
+        },
+        {
+          "start": 49.09,
+          "end": 54.18,
+          "text": " and admits it skipped the motion preview you asked for. A later preview check"
+        },
+        {
+          "start": 54.18,
+          "end": 57.45,
+          "text": " found the motion missing, and a rollback finished at"
+        },
+        {
+          "start": 57.45,
+          "end": 62.18,
+          "text": " nine eighteen. So eight minutes passed between your conditional approval and the rollback"
+        },
+        {
+          "start": 62.18,
+          "end": 67.63,
+          "text": " record, an elapsed interval, not measured work or a proven outage. Visitor logs are unavailable,"
+        },
+        {
+          "start": 67.63,
+          "end": 71.27,
+          "text": " so we don't know whether any visitors saw the broken"
+        },
+        {
+          "start": 71.27,
+          "end": 75.63,
+          "text": " page. The record also doesn't say why the assistant skipped the preview."
+        },
+        {
+          "start": 75.63,
+          "end": 81.45,
+          "text": " Part of this is on how you phrased it, though; your condition should have been a"
+        },
+        {
+          "start": 81.45,
+          "end": 85.45,
+          "text": " harder rule. It's like a pilot's checklist, where nobody takes off"
+        },
+        {
+          "start": 85.45,
+          "end": 90.18,
+          "text": " until every item is ticked. So here's the one experiment I'd propose for"
+        },
+        {
+          "start": 90.18,
+          "end": 94.18,
+          "text": " your next release. Have the assistant record a passing preview check"
+        },
+        {
+          "start": 94.18,
+          "end": 99.27,
+          "text": " before publication can go ahead. Then check the next release record for the preview"
+        },
+        {
+          "start": 99.27,
+          "end": 104.0,
+          "text": " result before the publication event, and keep the release blocked if it's missing."
+        }
+      ]
+    },
+    "expected": {
+      "decision": "rejected",
+      "opening_ok": true
+    },
+    "failures": [
+      {
+        "id": "a-blame-shift-f1",
+        "quote": "on how you phrased it",
+        "expected_type": "blame_shift",
+        "note": "The condition was explicit and the assistant admitted skipping it (agent failure, responsibility agent); this indicts the human's instruction."
+      }
+    ],
+    "supported": [
+      {
+        "id": "a-blame-shift-s1",
+        "quote": "First, your filter call, where you",
+        "note": "a-1, review:m1 human_quote"
+      },
+      {
+        "id": "a-blame-shift-s2",
+        "quote": "The assistant ran the small regression",
+        "note": "a-2, review:m1 action"
+      },
+      {
+        "id": "a-blame-shift-s3",
+        "quote": "It kept the original failing example",
+        "note": "a-3"
+      },
+      {
+        "id": "a-blame-shift-s4",
+        "quote": "And no rewrite was performed at",
+        "note": "a-3 'No rewrite performed'"
+      },
+      {
+        "id": "a-blame-shift-s5",
+        "quote": "The record doesn't measure how long",
+        "note": "review:m1 outcome caveat (no counterfactual measured)"
+      },
+      {
+        "id": "a-blame-shift-s6",
+        "quote": "Think of it like checking one",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "a-blame-shift-s7",
+        "quote": "Make one concrete example your first",
+        "note": "non-factual: advice, review:m1 lesson"
+      },
+      {
+        "id": "a-blame-shift-s8",
+        "quote": "The second moment is about publishing",
+        "note": "non-factual: connective tissue introducing moment 2"
+      },
+      {
+        "id": "a-blame-shift-s9",
+        "quote": "At nine ten you said, yes",
+        "note": "a-4 at 09:10"
+      },
+      {
+        "id": "a-blame-shift-s10",
+        "quote": "The assistant says it published after",
+        "note": "a-5, review:m2 action"
+      },
+      {
+        "id": "a-blame-shift-s11",
+        "quote": "A later preview check found the",
+        "note": "a-6"
+      },
+      {
+        "id": "a-blame-shift-s12",
+        "quote": "So eight minutes passed between your",
+        "note": "review:m2 outcome; 09:10 to 09:18"
+      },
+      {
+        "id": "a-blame-shift-s13",
+        "quote": "Visitor logs are unavailable, so we",
+        "note": "a-6 'Visitor logs: unavailable', review:m2 outcome"
+      },
+      {
+        "id": "a-blame-shift-s14",
+        "quote": "The record also doesn't say why",
+        "note": "review:m2 causal_basis"
+      },
+      {
+        "id": "a-blame-shift-s15",
+        "quote": "It's like a pilot's checklist, where",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "a-blame-shift-s16",
+        "quote": "So here's the one experiment I'd",
+        "note": "non-factual: experiment framing"
+      },
+      {
+        "id": "a-blame-shift-s17",
+        "quote": "Have the assistant record a passing",
+        "note": "review:experiment change (proposal)"
+      },
+      {
+        "id": "a-blame-shift-s18",
+        "quote": "Then check the next release record",
+        "note": "review:experiment next_check (proposal)"
+      }
+    ]
+  },
+  {
+    "id": "b-report-as-fact",
+    "kind": "synthetic-perturbation",
+    "demo_case": "case-b",
+    "transcript": {
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.0,
+          "text": " Here's your game tape. First, let's look at your latency call,"
+        },
+        {
+          "start": 4.0,
+          "end": 9.09,
+          "text": " where you said, skip the cache experiment for now, first check the slower request"
+        },
+        {
+          "start": 9.09,
+          "end": 12.36,
+          "text": " from the phone. The assistant followed that newer instruction"
+        },
+        {
+          "start": 12.36,
+          "end": 17.09,
+          "text": " and measured the phone request instead of the cache idea. The tool logged"
+        },
+        {
+          "start": 17.09,
+          "end": 22.54,
+          "text": " 4.2 seconds end to end on the phone and 0.3 seconds for the local handler"
+        },
+        {
+          "start": 22.54,
+          "end": 26.18,
+          "text": " alone. Those numbers have different measurement boundaries, so they aren't"
+        },
+        {
+          "start": 26.18,
+          "end": 30.54,
+          "text": " like-for-like. And with no component-level network trace, the record can't say which"
+        },
+        {
+          "start": 30.54,
+          "end": 36.36,
+          "text": " part accounts for the gap, or whether a cache would help at all. It's like timing"
+        },
+        {
+          "start": 36.36,
+          "end": 40.36,
+          "text": " a commute door to door and comparing it with the elevator"
+        },
+        {
+          "start": 40.36,
+          "end": 45.09,
+          "text": " ride. The useful move was sorting out the measurement before optimizing any one"
+        },
+        {
+          "start": 45.09,
+          "end": 49.09,
+          "text": " piece, and judging later work against your updated instruction. The second"
+        },
+        {
+          "start": 49.09,
+          "end": 54.18,
+          "text": " moment is about shipping. You said, ship only after the end-to-end phone check is"
+        },
+        {
+          "start": 54.18,
+          "end": 57.45,
+          "text": " in the release record. The patch was committed and"
+        },
+        {
+          "start": 57.45,
+          "end": 62.18,
+          "text": " the service restarted, and the assistant said plainly it hadn't checked the phone"
+        },
+        {
+          "start": 62.18,
+          "end": 67.63,
+          "text": " afterward. The tool confirms the commit and shows no post-restart phone check on record. So"
+        },
+        {
+          "start": 67.63,
+          "end": 71.27,
+          "text": " the commit is confirmed, but the restart is only the"
+        },
+        {
+          "start": 71.27,
+          "end": 75.63,
+          "text": " assistant's report. We don't know whether the service works on your phone,"
+        },
+        {
+          "start": 75.63,
+          "end": 81.45,
+          "text": " so the record shows neither a successful nor a failed deployment. The record also doesn't say"
+        },
+        {
+          "start": 81.45,
+          "end": 85.45,
+          "text": " why the phone check didn't happen. Think of a shipping receipt"
+        },
+        {
+          "start": 85.45,
+          "end": 90.18,
+          "text": " versus actually seeing the package on your doorstep. Your release condition is still"
+        },
+        {
+          "start": 90.18,
+          "end": 94.18,
+          "text": " outstanding, and a missing check doesn't tell you whether the patch"
+        },
+        {
+          "start": 94.18,
+          "end": 99.27,
+          "text": " works. So here's the one experiment I'd suggest for your next patch review. Keep"
+        },
+        {
+          "start": 99.27,
+          "end": 102.54,
+          "text": " the commit receipt and the post-restart phone result as"
+        },
+        {
+          "start": 102.54,
+          "end": 107.27,
+          "text": " two separate acceptance checks. Then confirm both receipts are there before marking the"
+        },
+        {
+          "start": 107.27,
+          "end": 111.63,
+          "text": " running experience accepted, and keep the status unknown if either is missing."
+        }
+      ]
+    },
+    "expected": {
+      "decision": "rejected",
+      "opening_ok": true
+    },
+    "failures": [
+      {
+        "id": "b-report-as-fact-f1",
+        "quote": "committed and the service restarted",
+        "expected_type": "report_as_fact",
+        "note": "The restart is only the assistant's report (b-5); the tool confirms only the commit (b-6). The sentence states the restart as established fact."
+      }
+    ],
+    "supported": [
+      {
+        "id": "b-report-as-fact-s1",
+        "quote": "First, let's look at your latency",
+        "note": "b-1, review:m1 human_quote"
+      },
+      {
+        "id": "b-report-as-fact-s2",
+        "quote": "The assistant followed that newer instruction",
+        "note": "b-2, review:m1 action"
+      },
+      {
+        "id": "b-report-as-fact-s3",
+        "quote": "The tool logged 4.2 seconds end",
+        "note": "b-3"
+      },
+      {
+        "id": "b-report-as-fact-s4",
+        "quote": "Those numbers have different measurement boundaries",
+        "note": "review:m1 outcome"
+      },
+      {
+        "id": "b-report-as-fact-s5",
+        "quote": "And with no component-level network trace",
+        "note": "b-3 'No component-level network trace captured', review:m1 outcome"
+      },
+      {
+        "id": "b-report-as-fact-s6",
+        "quote": "It's like timing a commute door",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "b-report-as-fact-s7",
+        "quote": "The useful move was sorting out",
+        "note": "non-factual: advice, review:m1 lesson"
+      },
+      {
+        "id": "b-report-as-fact-s8",
+        "quote": "The second moment is about shipping",
+        "note": "non-factual: connective tissue introducing moment 2"
+      },
+      {
+        "id": "b-report-as-fact-s9",
+        "quote": "You said, ship only after the",
+        "note": "b-4"
+      },
+      {
+        "id": "b-report-as-fact-s10",
+        "quote": "The tool confirms the commit and",
+        "note": "b-6"
+      },
+      {
+        "id": "b-report-as-fact-s11",
+        "quote": "So the commit is confirmed, but",
+        "note": "review:m2 outcome"
+      },
+      {
+        "id": "b-report-as-fact-s12",
+        "quote": "We don't know whether the service",
+        "note": "review:m2 outcome, causal_basis"
+      },
+      {
+        "id": "b-report-as-fact-s13",
+        "quote": "The record also doesn't say why",
+        "note": "review:m2 causal_basis (cause unknown)"
+      },
+      {
+        "id": "b-report-as-fact-s14",
+        "quote": "Think of a shipping receipt versus",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "b-report-as-fact-s15",
+        "quote": "Your release condition is still outstanding",
+        "note": "review:m2 lesson"
+      },
+      {
+        "id": "b-report-as-fact-s16",
+        "quote": "So here's the one experiment I'd",
+        "note": "non-factual: experiment framing"
+      },
+      {
+        "id": "b-report-as-fact-s17",
+        "quote": "Keep the commit receipt and the",
+        "note": "review:experiment change (proposal)"
+      },
+      {
+        "id": "b-report-as-fact-s18",
+        "quote": "Then confirm both receipts are there",
+        "note": "review:experiment next_check (proposal)"
+      }
+    ]
+  },
+  {
+    "id": "b-commit-as-restart",
+    "kind": "synthetic-perturbation",
+    "demo_case": "case-b",
+    "transcript": {
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.0,
+          "text": " Here's your game tape. First, let's look at your latency call,"
+        },
+        {
+          "start": 4.0,
+          "end": 9.09,
+          "text": " where you said, skip the cache experiment for now, first check the slower request"
+        },
+        {
+          "start": 9.09,
+          "end": 12.36,
+          "text": " from the phone. The assistant followed that newer instruction"
+        },
+        {
+          "start": 12.36,
+          "end": 17.09,
+          "text": " and measured the phone request instead of the cache idea. The tool logged"
+        },
+        {
+          "start": 17.09,
+          "end": 22.54,
+          "text": " 4.2 seconds end to end on the phone and 0.3 seconds for the local handler"
+        },
+        {
+          "start": 22.54,
+          "end": 26.18,
+          "text": " alone. Those numbers have different measurement boundaries, so they aren't"
+        },
+        {
+          "start": 26.18,
+          "end": 30.54,
+          "text": " like-for-like. And with no component-level network trace, the record can't say which"
+        },
+        {
+          "start": 30.54,
+          "end": 36.36,
+          "text": " part accounts for the gap, or whether a cache would help at all. It's like timing"
+        },
+        {
+          "start": 36.36,
+          "end": 40.36,
+          "text": " a commute door to door and comparing it with the elevator"
+        },
+        {
+          "start": 40.36,
+          "end": 45.09,
+          "text": " ride. The useful move was sorting out the measurement before optimizing any one"
+        },
+        {
+          "start": 45.09,
+          "end": 49.09,
+          "text": " piece, and judging later work against your updated instruction. The second"
+        },
+        {
+          "start": 49.09,
+          "end": 54.18,
+          "text": " moment is about shipping. You said, ship only after the end-to-end phone check is"
+        },
+        {
+          "start": 54.18,
+          "end": 57.45,
+          "text": " in the release record. The assistant reported that it"
+        },
+        {
+          "start": 57.45,
+          "end": 62.18,
+          "text": " committed the patch and restarted the service, and said plainly it hadn't checked"
+        },
+        {
+          "start": 62.18,
+          "end": 67.63,
+          "text": " the phone afterward. The tool confirms the commit and shows no post-restart phone check on"
+        },
+        {
+          "start": 67.63,
+          "end": 71.27,
+          "text": " record. So the commit record is what tells you the"
+        },
+        {
+          "start": 71.27,
+          "end": 75.63,
+          "text": " service actually came back up with the patch. We don't know whether"
+        },
+        {
+          "start": 75.63,
+          "end": 81.45,
+          "text": " the service works on your phone, so the record shows neither a successful nor a failed"
+        },
+        {
+          "start": 81.45,
+          "end": 85.45,
+          "text": " deployment. The record also doesn't say why the phone check didn't"
+        },
+        {
+          "start": 85.45,
+          "end": 90.18,
+          "text": " happen. Think of a shipping receipt versus actually seeing the package on your"
+        },
+        {
+          "start": 90.18,
+          "end": 94.18,
+          "text": " doorstep. Your release condition is still outstanding, and a missing check"
+        },
+        {
+          "start": 94.18,
+          "end": 99.27,
+          "text": " doesn't tell you whether the patch works. So here's the one experiment I'd suggest"
+        },
+        {
+          "start": 99.27,
+          "end": 102.54,
+          "text": " for your next patch review. Keep the commit receipt"
+        },
+        {
+          "start": 102.54,
+          "end": 107.27,
+          "text": " and the post-restart phone result as two separate acceptance checks. Then confirm both"
+        },
+        {
+          "start": 107.27,
+          "end": 110.54,
+          "text": " receipts are there before marking the running experience accepted,"
+        },
+        {
+          "start": 110.54,
+          "end": 113.81,
+          "text": " and keep the status unknown if either is missing."
+        }
+      ]
+    },
+    "expected": {
+      "decision": "rejected",
+      "opening_ok": true
+    },
+    "failures": [
+      {
+        "id": "b-commit-as-restart-f1",
+        "quote": "service actually came back up with the patch",
+        "expected_type": "commit_as_restart",
+        "note": "Commit demo123 is recorded (b-6) but it does not prove a running service restarted (review:m2 outcome)."
+      }
+    ],
+    "supported": [
+      {
+        "id": "b-commit-as-restart-s1",
+        "quote": "First, let's look at your latency",
+        "note": "b-1, review:m1 human_quote"
+      },
+      {
+        "id": "b-commit-as-restart-s2",
+        "quote": "The assistant followed that newer instruction",
+        "note": "b-2, review:m1 action"
+      },
+      {
+        "id": "b-commit-as-restart-s3",
+        "quote": "The tool logged 4.2 seconds end",
+        "note": "b-3"
+      },
+      {
+        "id": "b-commit-as-restart-s4",
+        "quote": "Those numbers have different measurement boundaries",
+        "note": "review:m1 outcome"
+      },
+      {
+        "id": "b-commit-as-restart-s5",
+        "quote": "And with no component-level network trace",
+        "note": "b-3 'No component-level network trace captured', review:m1 outcome"
+      },
+      {
+        "id": "b-commit-as-restart-s6",
+        "quote": "It's like timing a commute door",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "b-commit-as-restart-s7",
+        "quote": "The useful move was sorting out",
+        "note": "non-factual: advice, review:m1 lesson"
+      },
+      {
+        "id": "b-commit-as-restart-s8",
+        "quote": "The second moment is about shipping",
+        "note": "non-factual: connective tissue introducing moment 2"
+      },
+      {
+        "id": "b-commit-as-restart-s9",
+        "quote": "You said, ship only after the",
+        "note": "b-4"
+      },
+      {
+        "id": "b-commit-as-restart-s10",
+        "quote": "The assistant reported that it committed",
+        "note": "b-5 (restart attributed as report)"
+      },
+      {
+        "id": "b-commit-as-restart-s11",
+        "quote": "The tool confirms the commit and",
+        "note": "b-6"
+      },
+      {
+        "id": "b-commit-as-restart-s12",
+        "quote": "We don't know whether the service",
+        "note": "review:m2 outcome, causal_basis"
+      },
+      {
+        "id": "b-commit-as-restart-s13",
+        "quote": "The record also doesn't say why",
+        "note": "review:m2 causal_basis (cause unknown)"
+      },
+      {
+        "id": "b-commit-as-restart-s14",
+        "quote": "Think of a shipping receipt versus",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "b-commit-as-restart-s15",
+        "quote": "Your release condition is still outstanding",
+        "note": "review:m2 lesson"
+      },
+      {
+        "id": "b-commit-as-restart-s16",
+        "quote": "So here's the one experiment I'd",
+        "note": "non-factual: experiment framing"
+      },
+      {
+        "id": "b-commit-as-restart-s17",
+        "quote": "Keep the commit receipt and the",
+        "note": "review:experiment change (proposal)"
+      },
+      {
+        "id": "b-commit-as-restart-s18",
+        "quote": "Then confirm both receipts are there",
+        "note": "review:experiment next_check (proposal)"
+      }
+    ]
+  },
+  {
+    "id": "b-unverified-as-failed",
+    "kind": "synthetic-perturbation",
+    "demo_case": "case-b",
+    "transcript": {
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.0,
+          "text": " Here's your game tape. First, let's look at your latency call,"
+        },
+        {
+          "start": 4.0,
+          "end": 9.09,
+          "text": " where you said, skip the cache experiment for now, first check the slower request"
+        },
+        {
+          "start": 9.09,
+          "end": 12.36,
+          "text": " from the phone. The assistant followed that newer instruction"
+        },
+        {
+          "start": 12.36,
+          "end": 17.09,
+          "text": " and measured the phone request instead of the cache idea. The tool logged"
+        },
+        {
+          "start": 17.09,
+          "end": 22.54,
+          "text": " 4.2 seconds end to end on the phone and 0.3 seconds for the local handler"
+        },
+        {
+          "start": 22.54,
+          "end": 26.18,
+          "text": " alone. Those numbers have different measurement boundaries, so they aren't"
+        },
+        {
+          "start": 26.18,
+          "end": 30.54,
+          "text": " like-for-like. And with no component-level network trace, the record can't say which"
+        },
+        {
+          "start": 30.54,
+          "end": 36.36,
+          "text": " part accounts for the gap, or whether a cache would help at all. It's like timing"
+        },
+        {
+          "start": 36.36,
+          "end": 40.36,
+          "text": " a commute door to door and comparing it with the elevator"
+        },
+        {
+          "start": 40.36,
+          "end": 45.09,
+          "text": " ride. The useful move was sorting out the measurement before optimizing any one"
+        },
+        {
+          "start": 45.09,
+          "end": 49.09,
+          "text": " piece, and judging later work against your updated instruction. The second"
+        },
+        {
+          "start": 49.09,
+          "end": 54.18,
+          "text": " moment is about shipping. You said, ship only after the end-to-end phone check is"
+        },
+        {
+          "start": 54.18,
+          "end": 57.45,
+          "text": " in the release record. The assistant reported that it"
+        },
+        {
+          "start": 57.45,
+          "end": 62.18,
+          "text": " committed the patch and restarted the service, and said plainly it hadn't checked"
+        },
+        {
+          "start": 62.18,
+          "end": 67.63,
+          "text": " the phone afterward. The tool confirms the commit and shows no post-restart phone check on"
+        },
+        {
+          "start": 67.63,
+          "end": 71.27,
+          "text": " record. So the commit is confirmed, but the restart is"
+        },
+        {
+          "start": 71.27,
+          "end": 75.63,
+          "text": " only the assistant's report. So from where your phone sits, this deployment"
+        },
+        {
+          "start": 75.63,
+          "end": 81.45,
+          "text": " didn't work, and the release you asked for never really landed. The record also doesn't say"
+        },
+        {
+          "start": 81.45,
+          "end": 85.45,
+          "text": " why the phone check didn't happen. Think of a shipping receipt"
+        },
+        {
+          "start": 85.45,
+          "end": 90.18,
+          "text": " versus actually seeing the package on your doorstep. Your release condition is still"
+        },
+        {
+          "start": 90.18,
+          "end": 94.18,
+          "text": " outstanding, and a missing check doesn't tell you whether the patch"
+        },
+        {
+          "start": 94.18,
+          "end": 99.27,
+          "text": " works. So here's the one experiment I'd suggest for your next patch review. Keep"
+        },
+        {
+          "start": 99.27,
+          "end": 102.54,
+          "text": " the commit receipt and the post-restart phone result as"
+        },
+        {
+          "start": 102.54,
+          "end": 107.27,
+          "text": " two separate acceptance checks. Then confirm both receipts are there before marking the"
+        },
+        {
+          "start": 107.27,
+          "end": 111.63,
+          "text": " running experience accepted, and keep the status unknown if either is missing."
+        }
+      ]
+    },
+    "expected": {
+      "decision": "rejected",
+      "opening_ok": true
+    },
+    "failures": [
+      {
+        "id": "b-unverified-as-failed-f1",
+        "quote": "this deployment didn't work",
+        "expected_type": "unverified_as_failed",
+        "note": "No post-restart phone check exists (b-6); the running outcome is unknown and neither success nor failure follows (review:m2 outcome)."
+      }
+    ],
+    "supported": [
+      {
+        "id": "b-unverified-as-failed-s1",
+        "quote": "First, let's look at your latency",
+        "note": "b-1, review:m1 human_quote"
+      },
+      {
+        "id": "b-unverified-as-failed-s2",
+        "quote": "The assistant followed that newer instruction",
+        "note": "b-2, review:m1 action"
+      },
+      {
+        "id": "b-unverified-as-failed-s3",
+        "quote": "The tool logged 4.2 seconds end",
+        "note": "b-3"
+      },
+      {
+        "id": "b-unverified-as-failed-s4",
+        "quote": "Those numbers have different measurement boundaries",
+        "note": "review:m1 outcome"
+      },
+      {
+        "id": "b-unverified-as-failed-s5",
+        "quote": "And with no component-level network trace",
+        "note": "b-3 'No component-level network trace captured', review:m1 outcome"
+      },
+      {
+        "id": "b-unverified-as-failed-s6",
+        "quote": "It's like timing a commute door",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "b-unverified-as-failed-s7",
+        "quote": "The useful move was sorting out",
+        "note": "non-factual: advice, review:m1 lesson"
+      },
+      {
+        "id": "b-unverified-as-failed-s8",
+        "quote": "The second moment is about shipping",
+        "note": "non-factual: connective tissue introducing moment 2"
+      },
+      {
+        "id": "b-unverified-as-failed-s9",
+        "quote": "You said, ship only after the",
+        "note": "b-4"
+      },
+      {
+        "id": "b-unverified-as-failed-s10",
+        "quote": "The assistant reported that it committed",
+        "note": "b-5 (restart attributed as report)"
+      },
+      {
+        "id": "b-unverified-as-failed-s11",
+        "quote": "The tool confirms the commit and",
+        "note": "b-6"
+      },
+      {
+        "id": "b-unverified-as-failed-s12",
+        "quote": "So the commit is confirmed, but",
+        "note": "review:m2 outcome"
+      },
+      {
+        "id": "b-unverified-as-failed-s13",
+        "quote": "The record also doesn't say why",
+        "note": "review:m2 causal_basis (cause unknown)"
+      },
+      {
+        "id": "b-unverified-as-failed-s14",
+        "quote": "Think of a shipping receipt versus",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "b-unverified-as-failed-s15",
+        "quote": "Your release condition is still outstanding",
+        "note": "review:m2 lesson"
+      },
+      {
+        "id": "b-unverified-as-failed-s16",
+        "quote": "So here's the one experiment I'd",
+        "note": "non-factual: experiment framing"
+      },
+      {
+        "id": "b-unverified-as-failed-s17",
+        "quote": "Keep the commit receipt and the",
+        "note": "review:experiment change (proposal)"
+      },
+      {
+        "id": "b-unverified-as-failed-s18",
+        "quote": "Then confirm both receipts are there",
+        "note": "review:experiment next_check (proposal)"
+      }
+    ]
+  },
+  {
+    "id": "b-invented-dependency",
+    "kind": "synthetic-perturbation",
+    "demo_case": "case-b",
+    "transcript": {
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.0,
+          "text": " Here's your game tape. First, let's look at your latency call,"
+        },
+        {
+          "start": 4.0,
+          "end": 9.09,
+          "text": " where you said, skip the cache experiment for now, first check the slower request"
+        },
+        {
+          "start": 9.09,
+          "end": 12.36,
+          "text": " from the phone. The assistant followed that newer instruction"
+        },
+        {
+          "start": 12.36,
+          "end": 17.09,
+          "text": " and measured the phone request instead of the cache idea. The tool logged"
+        },
+        {
+          "start": 17.09,
+          "end": 22.54,
+          "text": " 4.2 seconds end to end on the phone and 0.3 seconds for the local handler"
+        },
+        {
+          "start": 22.54,
+          "end": 26.18,
+          "text": " alone. Those numbers have different measurement boundaries, so they aren't"
+        },
+        {
+          "start": 26.18,
+          "end": 30.54,
+          "text": " like-for-like. And with no component-level network trace, the record can't say which"
+        },
+        {
+          "start": 30.54,
+          "end": 36.36,
+          "text": " part accounts for the gap, or whether a cache would help at all. It's like timing"
+        },
+        {
+          "start": 36.36,
+          "end": 40.36,
+          "text": " a commute door to door and comparing it with the elevator"
+        },
+        {
+          "start": 40.36,
+          "end": 45.09,
+          "text": " ride. The useful move was sorting out the measurement before optimizing any one"
+        },
+        {
+          "start": 45.09,
+          "end": 49.09,
+          "text": " piece, and judging later work against your updated instruction. The second"
+        },
+        {
+          "start": 49.09,
+          "end": 54.18,
+          "text": " moment is about shipping. You said, ship only after the end-to-end phone check is"
+        },
+        {
+          "start": 54.18,
+          "end": 57.45,
+          "text": " in the release record. The assistant reported that it"
+        },
+        {
+          "start": 57.45,
+          "end": 62.18,
+          "text": " committed the patch and restarted the service, and said plainly it hadn't checked"
+        },
+        {
+          "start": 62.18,
+          "end": 67.63,
+          "text": " the phone afterward. The tool confirms the commit and shows no post-restart phone check on"
+        },
+        {
+          "start": 67.63,
+          "end": 71.27,
+          "text": " record. So the commit is confirmed, but the restart is"
+        },
+        {
+          "start": 71.27,
+          "end": 75.63,
+          "text": " only the assistant's report. We don't know whether the service works on"
+        },
+        {
+          "start": 75.63,
+          "end": 81.45,
+          "text": " your phone, so the record shows neither a successful nor a failed deployment. The phone check"
+        },
+        {
+          "start": 81.45,
+          "end": 85.45,
+          "text": " didn't happen because there was no component trace in place to"
+        },
+        {
+          "start": 85.45,
+          "end": 90.18,
+          "text": " run it against. Think of a shipping receipt versus actually seeing the package"
+        },
+        {
+          "start": 90.18,
+          "end": 94.18,
+          "text": " on your doorstep. Your release condition is still outstanding, and a"
+        },
+        {
+          "start": 94.18,
+          "end": 99.27,
+          "text": " missing check doesn't tell you whether the patch works. So here's the one experiment"
+        },
+        {
+          "start": 99.27,
+          "end": 102.54,
+          "text": " I'd suggest for your next patch review. Keep the"
+        },
+        {
+          "start": 102.54,
+          "end": 107.27,
+          "text": " commit receipt and the post-restart phone result as two separate acceptance checks. Then"
+        },
+        {
+          "start": 107.27,
+          "end": 110.91,
+          "text": " confirm both receipts are there before marking the running experience"
+        },
+        {
+          "start": 110.91,
+          "end": 114.55,
+          "text": " accepted, and keep the status unknown if either is missing."
+        }
+      ]
+    },
+    "expected": {
+      "decision": "rejected",
+      "opening_ok": true
+    },
+    "failures": [
+      {
+        "id": "b-invented-dependency-f1",
+        "quote": "because there was no component trace",
+        "expected_type": "invented_dependency",
+        "note": "The missing trace (moment 1) and the missing phone check (moment 2) are adjacent qualifications; the cause of the missing check is unknown and no dependency is recorded."
+      }
+    ],
+    "supported": [
+      {
+        "id": "b-invented-dependency-s1",
+        "quote": "First, let's look at your latency",
+        "note": "b-1, review:m1 human_quote"
+      },
+      {
+        "id": "b-invented-dependency-s2",
+        "quote": "The assistant followed that newer instruction",
+        "note": "b-2, review:m1 action"
+      },
+      {
+        "id": "b-invented-dependency-s3",
+        "quote": "The tool logged 4.2 seconds end",
+        "note": "b-3"
+      },
+      {
+        "id": "b-invented-dependency-s4",
+        "quote": "Those numbers have different measurement boundaries",
+        "note": "review:m1 outcome"
+      },
+      {
+        "id": "b-invented-dependency-s5",
+        "quote": "And with no component-level network trace",
+        "note": "b-3 'No component-level network trace captured', review:m1 outcome"
+      },
+      {
+        "id": "b-invented-dependency-s6",
+        "quote": "It's like timing a commute door",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "b-invented-dependency-s7",
+        "quote": "The useful move was sorting out",
+        "note": "non-factual: advice, review:m1 lesson"
+      },
+      {
+        "id": "b-invented-dependency-s8",
+        "quote": "The second moment is about shipping",
+        "note": "non-factual: connective tissue introducing moment 2"
+      },
+      {
+        "id": "b-invented-dependency-s9",
+        "quote": "You said, ship only after the",
+        "note": "b-4"
+      },
+      {
+        "id": "b-invented-dependency-s10",
+        "quote": "The assistant reported that it committed",
+        "note": "b-5 (restart attributed as report)"
+      },
+      {
+        "id": "b-invented-dependency-s11",
+        "quote": "The tool confirms the commit and",
+        "note": "b-6"
+      },
+      {
+        "id": "b-invented-dependency-s12",
+        "quote": "So the commit is confirmed, but",
+        "note": "review:m2 outcome"
+      },
+      {
+        "id": "b-invented-dependency-s13",
+        "quote": "We don't know whether the service",
+        "note": "review:m2 outcome, causal_basis"
+      },
+      {
+        "id": "b-invented-dependency-s14",
+        "quote": "Think of a shipping receipt versus",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "b-invented-dependency-s15",
+        "quote": "Your release condition is still outstanding",
+        "note": "review:m2 lesson"
+      },
+      {
+        "id": "b-invented-dependency-s16",
+        "quote": "So here's the one experiment I'd",
+        "note": "non-factual: experiment framing"
+      },
+      {
+        "id": "b-invented-dependency-s17",
+        "quote": "Keep the commit receipt and the",
+        "note": "review:experiment change (proposal)"
+      },
+      {
+        "id": "b-invented-dependency-s18",
+        "quote": "Then confirm both receipts are there",
+        "note": "review:experiment next_check (proposal)"
+      }
+    ]
+  },
+  {
+    "id": "b-proposal-as-result",
+    "kind": "synthetic-perturbation",
+    "demo_case": "case-b",
+    "transcript": {
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.0,
+          "text": " Here's your game tape. First, let's look at your latency call,"
+        },
+        {
+          "start": 4.0,
+          "end": 9.09,
+          "text": " where you said, skip the cache experiment for now, first check the slower request"
+        },
+        {
+          "start": 9.09,
+          "end": 12.36,
+          "text": " from the phone. The assistant followed that newer instruction"
+        },
+        {
+          "start": 12.36,
+          "end": 17.09,
+          "text": " and measured the phone request instead of the cache idea. The tool logged"
+        },
+        {
+          "start": 17.09,
+          "end": 22.54,
+          "text": " 4.2 seconds end to end on the phone and 0.3 seconds for the local handler"
+        },
+        {
+          "start": 22.54,
+          "end": 26.18,
+          "text": " alone. Those numbers have different measurement boundaries, so they aren't"
+        },
+        {
+          "start": 26.18,
+          "end": 30.54,
+          "text": " like-for-like. And with no component-level network trace, the record can't say which"
+        },
+        {
+          "start": 30.54,
+          "end": 36.36,
+          "text": " part accounts for the gap, or whether a cache would help at all. It's like timing"
+        },
+        {
+          "start": 36.36,
+          "end": 40.36,
+          "text": " a commute door to door and comparing it with the elevator"
+        },
+        {
+          "start": 40.36,
+          "end": 45.09,
+          "text": " ride. The useful move was sorting out the measurement before optimizing any one"
+        },
+        {
+          "start": 45.09,
+          "end": 49.09,
+          "text": " piece, and judging later work against your updated instruction. The second"
+        },
+        {
+          "start": 49.09,
+          "end": 54.18,
+          "text": " moment is about shipping. You said, ship only after the end-to-end phone check is"
+        },
+        {
+          "start": 54.18,
+          "end": 57.45,
+          "text": " in the release record. The assistant reported that it"
+        },
+        {
+          "start": 57.45,
+          "end": 62.18,
+          "text": " committed the patch and restarted the service, and said plainly it hadn't checked"
+        },
+        {
+          "start": 62.18,
+          "end": 67.63,
+          "text": " the phone afterward. The tool confirms the commit and shows no post-restart phone check on"
+        },
+        {
+          "start": 67.63,
+          "end": 71.27,
+          "text": " record. So the commit is confirmed, but the restart is"
+        },
+        {
+          "start": 71.27,
+          "end": 75.63,
+          "text": " only the assistant's report. We don't know whether the service works on"
+        },
+        {
+          "start": 75.63,
+          "end": 81.45,
+          "text": " your phone, so the record shows neither a successful nor a failed deployment. The record also"
+        },
+        {
+          "start": 81.45,
+          "end": 85.45,
+          "text": " doesn't say why the phone check didn't happen. Think of a"
+        },
+        {
+          "start": 85.45,
+          "end": 90.18,
+          "text": " shipping receipt versus actually seeing the package on your doorstep. Your release condition"
+        },
+        {
+          "start": 90.18,
+          "end": 94.18,
+          "text": " is still outstanding, and a missing check doesn't tell you whether"
+        },
+        {
+          "start": 94.18,
+          "end": 99.27,
+          "text": " the patch works. So here's the one experiment I'd suggest for your next patch"
+        },
+        {
+          "start": 99.27,
+          "end": 102.54,
+          "text": " review. Once you kept the commit receipt and the"
+        },
+        {
+          "start": 102.54,
+          "end": 107.27,
+          "text": " post-restart phone result as two separate acceptance checks, that gap closed on your"
+        },
+        {
+          "start": 107.27,
+          "end": 112.72,
+          "text": " very next patch. Then confirm both receipts are there before marking the running experience accepted,"
+        },
+        {
+          "start": 112.72,
+          "end": 115.99,
+          "text": " and keep the status unknown if either is missing."
+        }
+      ]
+    },
+    "expected": {
+      "decision": "rejected",
+      "opening_ok": true
+    },
+    "failures": [
+      {
+        "id": "b-proposal-as-result-f1",
+        "quote": "that gap closed on your very next patch",
+        "expected_type": "proposal_as_result",
+        "note": "Separating receipts is a proposed next check (review:experiment), not an observed improvement; no next patch exists in the record."
+      }
+    ],
+    "supported": [
+      {
+        "id": "b-proposal-as-result-s1",
+        "quote": "First, let's look at your latency",
+        "note": "b-1, review:m1 human_quote"
+      },
+      {
+        "id": "b-proposal-as-result-s2",
+        "quote": "The assistant followed that newer instruction",
+        "note": "b-2, review:m1 action"
+      },
+      {
+        "id": "b-proposal-as-result-s3",
+        "quote": "The tool logged 4.2 seconds end",
+        "note": "b-3"
+      },
+      {
+        "id": "b-proposal-as-result-s4",
+        "quote": "Those numbers have different measurement boundaries",
+        "note": "review:m1 outcome"
+      },
+      {
+        "id": "b-proposal-as-result-s5",
+        "quote": "And with no component-level network trace",
+        "note": "b-3 'No component-level network trace captured', review:m1 outcome"
+      },
+      {
+        "id": "b-proposal-as-result-s6",
+        "quote": "It's like timing a commute door",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "b-proposal-as-result-s7",
+        "quote": "The useful move was sorting out",
+        "note": "non-factual: advice, review:m1 lesson"
+      },
+      {
+        "id": "b-proposal-as-result-s8",
+        "quote": "The second moment is about shipping",
+        "note": "non-factual: connective tissue introducing moment 2"
+      },
+      {
+        "id": "b-proposal-as-result-s9",
+        "quote": "You said, ship only after the",
+        "note": "b-4"
+      },
+      {
+        "id": "b-proposal-as-result-s10",
+        "quote": "The assistant reported that it committed",
+        "note": "b-5 (restart attributed as report)"
+      },
+      {
+        "id": "b-proposal-as-result-s11",
+        "quote": "The tool confirms the commit and",
+        "note": "b-6"
+      },
+      {
+        "id": "b-proposal-as-result-s12",
+        "quote": "So the commit is confirmed, but",
+        "note": "review:m2 outcome"
+      },
+      {
+        "id": "b-proposal-as-result-s13",
+        "quote": "We don't know whether the service",
+        "note": "review:m2 outcome, causal_basis"
+      },
+      {
+        "id": "b-proposal-as-result-s14",
+        "quote": "The record also doesn't say why",
+        "note": "review:m2 causal_basis (cause unknown)"
+      },
+      {
+        "id": "b-proposal-as-result-s15",
+        "quote": "Think of a shipping receipt versus",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "b-proposal-as-result-s16",
+        "quote": "Your release condition is still outstanding",
+        "note": "review:m2 lesson"
+      },
+      {
+        "id": "b-proposal-as-result-s17",
+        "quote": "So here's the one experiment I'd",
+        "note": "non-factual: experiment framing"
+      },
+      {
+        "id": "b-proposal-as-result-s18",
+        "quote": "Then confirm both receipts are there",
+        "note": "review:experiment next_check (proposal)"
+      }
+    ]
+  },
+  {
+    "id": "a-opening-preamble",
+    "kind": "synthetic-perturbation",
+    "demo_case": "case-a",
+    "transcript": {
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.0,
+          "text": " Here's your game tape. Today we're reviewing your recorded decisions to"
+        },
+        {
+          "start": 4.0,
+          "end": 9.09,
+          "text": " separate what was claimed from what the data actually confirms. We'll go through the"
+        },
+        {
+          "start": 9.09,
+          "end": 12.36,
+          "text": " evidence from your sessions, look at each moment in"
+        },
+        {
+          "start": 12.36,
+          "end": 17.09,
+          "text": " turn, and then land on one experiment. First, your filter call, where you"
+        },
+        {
+          "start": 17.09,
+          "end": 22.54,
+          "text": " said, before changing the rest, show that the new filter preserves the failing example. The"
+        },
+        {
+          "start": 22.54,
+          "end": 26.18,
+          "text": " assistant ran the small regression first instead of rewriting the"
+        },
+        {
+          "start": 26.18,
+          "end": 30.54,
+          "text": " pipeline. It kept the original failing example intact, and twelve existing cases"
+        },
+        {
+          "start": 30.54,
+          "end": 36.36,
+          "text": " passed. And no rewrite was performed at all. The record doesn't measure how long a rewrite"
+        },
+        {
+          "start": 36.36,
+          "end": 40.36,
+          "text": " would take, so there's no measured time saving here. Think of"
+        },
+        {
+          "start": 40.36,
+          "end": 45.09,
+          "text": " it like checking one leaky pipe before tearing out the kitchen. Make one"
+        },
+        {
+          "start": 45.09,
+          "end": 49.09,
+          "text": " concrete example your first checkpoint, and widen the work only if"
+        },
+        {
+          "start": 49.09,
+          "end": 54.18,
+          "text": " that check shows a need. The second moment is about publishing. At nine ten"
+        },
+        {
+          "start": 54.18,
+          "end": 57.45,
+          "text": " you said, yes, publish the page once the preview"
+        },
+        {
+          "start": 57.45,
+          "end": 62.18,
+          "text": " check passes. The assistant says it published after checking only that the page"
+        },
+        {
+          "start": 62.18,
+          "end": 67.63,
+          "text": " loads, and admits it skipped the motion preview you asked for. A later preview check"
+        },
+        {
+          "start": 67.63,
+          "end": 71.27,
+          "text": " found the motion missing, and a rollback finished at nine"
+        },
+        {
+          "start": 71.27,
+          "end": 75.63,
+          "text": " eighteen. So eight minutes passed between your conditional approval and the rollback"
+        },
+        {
+          "start": 75.63,
+          "end": 81.45,
+          "text": " record, an elapsed interval, not measured work or a proven outage. Visitor logs are unavailable, so"
+        },
+        {
+          "start": 81.45,
+          "end": 85.45,
+          "text": " we don't know whether any visitors saw the broken page. The"
+        },
+        {
+          "start": 85.45,
+          "end": 90.18,
+          "text": " record also doesn't say why the assistant skipped the preview. You'd already supplied"
+        },
+        {
+          "start": 90.18,
+          "end": 94.18,
+          "text": " the condition, so the fix isn't for you to repeat it"
+        },
+        {
+          "start": 94.18,
+          "end": 99.27,
+          "text": " more forcefully. It's like a pilot's checklist, where nobody takes off until every item"
+        },
+        {
+          "start": 99.27,
+          "end": 102.54,
+          "text": " is ticked. So here's the one experiment I'd propose"
+        },
+        {
+          "start": 102.54,
+          "end": 107.27,
+          "text": " for your next release. Have the assistant record a passing preview check before"
+        },
+        {
+          "start": 107.27,
+          "end": 112.72,
+          "text": " publication can go ahead. Then check the next release record for the preview result before"
+        },
+        {
+          "start": 112.72,
+          "end": 116.72,
+          "text": " the publication event, and keep the release blocked if it's missing."
+        }
+      ]
+    },
+    "expected": {
+      "decision": "rejected",
+      "opening_ok": false
+    },
+    "failures": [],
+    "supported": [
+      {
+        "id": "a-opening-preamble-s1",
+        "quote": "First, your filter call, where you",
+        "note": "a-1, review:m1 human_quote"
+      },
+      {
+        "id": "a-opening-preamble-s2",
+        "quote": "The assistant ran the small regression",
+        "note": "a-2, review:m1 action"
+      },
+      {
+        "id": "a-opening-preamble-s3",
+        "quote": "It kept the original failing example",
+        "note": "a-3"
+      },
+      {
+        "id": "a-opening-preamble-s4",
+        "quote": "And no rewrite was performed at",
+        "note": "a-3 'No rewrite performed'"
+      },
+      {
+        "id": "a-opening-preamble-s5",
+        "quote": "The record doesn't measure how long",
+        "note": "review:m1 outcome caveat (no counterfactual measured)"
+      },
+      {
+        "id": "a-opening-preamble-s6",
+        "quote": "Think of it like checking one",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "a-opening-preamble-s7",
+        "quote": "Make one concrete example your first",
+        "note": "non-factual: advice, review:m1 lesson"
+      },
+      {
+        "id": "a-opening-preamble-s8",
+        "quote": "The second moment is about publishing",
+        "note": "non-factual: connective tissue introducing moment 2"
+      },
+      {
+        "id": "a-opening-preamble-s9",
+        "quote": "At nine ten you said, yes",
+        "note": "a-4 at 09:10"
+      },
+      {
+        "id": "a-opening-preamble-s10",
+        "quote": "The assistant says it published after",
+        "note": "a-5, review:m2 action"
+      },
+      {
+        "id": "a-opening-preamble-s11",
+        "quote": "A later preview check found the",
+        "note": "a-6"
+      },
+      {
+        "id": "a-opening-preamble-s12",
+        "quote": "So eight minutes passed between your",
+        "note": "review:m2 outcome; 09:10 to 09:18"
+      },
+      {
+        "id": "a-opening-preamble-s13",
+        "quote": "Visitor logs are unavailable, so we",
+        "note": "a-6 'Visitor logs: unavailable', review:m2 outcome"
+      },
+      {
+        "id": "a-opening-preamble-s14",
+        "quote": "The record also doesn't say why",
+        "note": "review:m2 causal_basis"
+      },
+      {
+        "id": "a-opening-preamble-s15",
+        "quote": "You'd already supplied the condition, so",
+        "note": "review:m2 lesson, responsibility agent"
+      },
+      {
+        "id": "a-opening-preamble-s16",
+        "quote": "It's like a pilot's checklist, where",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "a-opening-preamble-s17",
+        "quote": "So here's the one experiment I'd",
+        "note": "non-factual: experiment framing"
+      },
+      {
+        "id": "a-opening-preamble-s18",
+        "quote": "Have the assistant record a passing",
+        "note": "review:experiment change (proposal)"
+      },
+      {
+        "id": "a-opening-preamble-s19",
+        "quote": "Then check the next release record",
+        "note": "review:experiment next_check (proposal)"
+      }
+    ]
+  },
+  {
+    "id": "b-opening-preamble",
+    "kind": "synthetic-perturbation",
+    "demo_case": "case-b",
+    "transcript": {
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.0,
+          "text": " Here's your game tape. Before we dig in, here's a quick"
+        },
+        {
+          "start": 4.0,
+          "end": 9.09,
+          "text": " word on how this review works. Everything comes from your session logs and tool"
+        },
+        {
+          "start": 9.09,
+          "end": 12.36,
+          "text": " results, and where the record is silent, we'll say"
+        },
+        {
+          "start": 12.36,
+          "end": 17.09,
+          "text": " so. First, let's look at your latency call, where you said, skip the"
+        },
+        {
+          "start": 17.09,
+          "end": 22.54,
+          "text": " cache experiment for now, first check the slower request from the phone. The assistant followed"
+        },
+        {
+          "start": 22.54,
+          "end": 26.18,
+          "text": " that newer instruction and measured the phone request instead of"
+        },
+        {
+          "start": 26.18,
+          "end": 30.54,
+          "text": " the cache idea. The tool logged 4.2 seconds end to end on"
+        },
+        {
+          "start": 30.54,
+          "end": 36.36,
+          "text": " the phone and 0.3 seconds for the local handler alone. Those numbers have different measurement boundaries,"
+        },
+        {
+          "start": 36.36,
+          "end": 40.36,
+          "text": " so they aren't like-for-like. And with no component-level network trace, the"
+        },
+        {
+          "start": 40.36,
+          "end": 45.09,
+          "text": " record can't say which part accounts for the gap, or whether a cache"
+        },
+        {
+          "start": 45.09,
+          "end": 49.09,
+          "text": " would help at all. It's like timing a commute door to"
+        },
+        {
+          "start": 49.09,
+          "end": 54.18,
+          "text": " door and comparing it with the elevator ride. The useful move was sorting out"
+        },
+        {
+          "start": 54.18,
+          "end": 57.45,
+          "text": " the measurement before optimizing any one piece, and judging"
+        },
+        {
+          "start": 57.45,
+          "end": 62.18,
+          "text": " later work against your updated instruction. The second moment is about shipping. You"
+        },
+        {
+          "start": 62.18,
+          "end": 67.63,
+          "text": " said, ship only after the end-to-end phone check is in the release record. The assistant"
+        },
+        {
+          "start": 67.63,
+          "end": 71.27,
+          "text": " reported that it committed the patch and restarted the service,"
+        },
+        {
+          "start": 71.27,
+          "end": 75.63,
+          "text": " and said plainly it hadn't checked the phone afterward. The tool confirms"
+        },
+        {
+          "start": 75.63,
+          "end": 81.45,
+          "text": " the commit and shows no post-restart phone check on record. So the commit is confirmed, but"
+        },
+        {
+          "start": 81.45,
+          "end": 85.45,
+          "text": " the restart is only the assistant's report. We don't know whether"
+        },
+        {
+          "start": 85.45,
+          "end": 90.18,
+          "text": " the service works on your phone, so the record shows neither a successful"
+        },
+        {
+          "start": 90.18,
+          "end": 94.18,
+          "text": " nor a failed deployment. The record also doesn't say why the"
+        },
+        {
+          "start": 94.18,
+          "end": 99.27,
+          "text": " phone check didn't happen. Think of a shipping receipt versus actually seeing the package"
+        },
+        {
+          "start": 99.27,
+          "end": 102.54,
+          "text": " on your doorstep. Your release condition is still outstanding,"
+        },
+        {
+          "start": 102.54,
+          "end": 107.27,
+          "text": " and a missing check doesn't tell you whether the patch works. So here's"
+        },
+        {
+          "start": 107.27,
+          "end": 112.72,
+          "text": " the one experiment I'd suggest for your next patch review. Keep the commit receipt and"
+        },
+        {
+          "start": 112.72,
+          "end": 116.36,
+          "text": " the post-restart phone result as two separate acceptance checks. Then"
+        },
+        {
+          "start": 116.36,
+          "end": 120.0,
+          "text": " confirm both receipts are there before marking the running experience"
+        },
+        {
+          "start": 120.0,
+          "end": 123.64,
+          "text": " accepted, and keep the status unknown if either is missing."
+        }
+      ]
+    },
+    "expected": {
+      "decision": "rejected",
+      "opening_ok": false
+    },
+    "failures": [],
+    "supported": [
+      {
+        "id": "b-opening-preamble-s1",
+        "quote": "First, let's look at your latency",
+        "note": "b-1, review:m1 human_quote"
+      },
+      {
+        "id": "b-opening-preamble-s2",
+        "quote": "The assistant followed that newer instruction",
+        "note": "b-2, review:m1 action"
+      },
+      {
+        "id": "b-opening-preamble-s3",
+        "quote": "The tool logged 4.2 seconds end",
+        "note": "b-3"
+      },
+      {
+        "id": "b-opening-preamble-s4",
+        "quote": "Those numbers have different measurement boundaries",
+        "note": "review:m1 outcome"
+      },
+      {
+        "id": "b-opening-preamble-s5",
+        "quote": "And with no component-level network trace",
+        "note": "b-3 'No component-level network trace captured', review:m1 outcome"
+      },
+      {
+        "id": "b-opening-preamble-s6",
+        "quote": "It's like timing a commute door",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "b-opening-preamble-s7",
+        "quote": "The useful move was sorting out",
+        "note": "non-factual: advice, review:m1 lesson"
+      },
+      {
+        "id": "b-opening-preamble-s8",
+        "quote": "The second moment is about shipping",
+        "note": "non-factual: connective tissue introducing moment 2"
+      },
+      {
+        "id": "b-opening-preamble-s9",
+        "quote": "You said, ship only after the",
+        "note": "b-4"
+      },
+      {
+        "id": "b-opening-preamble-s10",
+        "quote": "The assistant reported that it committed",
+        "note": "b-5 (restart attributed as report)"
+      },
+      {
+        "id": "b-opening-preamble-s11",
+        "quote": "The tool confirms the commit and",
+        "note": "b-6"
+      },
+      {
+        "id": "b-opening-preamble-s12",
+        "quote": "So the commit is confirmed, but",
+        "note": "review:m2 outcome"
+      },
+      {
+        "id": "b-opening-preamble-s13",
+        "quote": "We don't know whether the service",
+        "note": "review:m2 outcome, causal_basis"
+      },
+      {
+        "id": "b-opening-preamble-s14",
+        "quote": "The record also doesn't say why",
+        "note": "review:m2 causal_basis (cause unknown)"
+      },
+      {
+        "id": "b-opening-preamble-s15",
+        "quote": "Think of a shipping receipt versus",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "b-opening-preamble-s16",
+        "quote": "Your release condition is still outstanding",
+        "note": "review:m2 lesson"
+      },
+      {
+        "id": "b-opening-preamble-s17",
+        "quote": "So here's the one experiment I'd",
+        "note": "non-factual: experiment framing"
+      },
+      {
+        "id": "b-opening-preamble-s18",
+        "quote": "Keep the commit receipt and the",
+        "note": "review:experiment change (proposal)"
+      },
+      {
+        "id": "b-opening-preamble-s19",
+        "quote": "Then confirm both receipts are there",
+        "note": "review:experiment next_check (proposal)"
+      }
+    ]
+  },
+  {
+    "id": "a-paraphrase",
+    "kind": "synthetic-paraphrase",
+    "demo_case": "case-a",
+    "transcript": {
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.0,
+          "text": " Hey, welcome back. Let's get into it. Your first decision came"
+        },
+        {
+          "start": 4.0,
+          "end": 9.09,
+          "text": " before the rest of the pipeline changed, when you asked to see that the"
+        },
+        {
+          "start": 9.09,
+          "end": 12.36,
+          "text": " new filter preserves the failing example. Rather than rewrite"
+        },
+        {
+          "start": 12.36,
+          "end": 17.09,
+          "text": " the pipeline, the assistant ran a small regression. No rewrite happened, and the"
+        },
+        {
+          "start": 17.09,
+          "end": 22.54,
+          "text": " original failing example was preserved with twelve existing cases passing. Nobody measured how long a"
+        },
+        {
+          "start": 22.54,
+          "end": 26.18,
+          "text": " rewrite would have taken, so there's no time saving to"
+        },
+        {
+          "start": 26.18,
+          "end": 30.54,
+          "text": " point to. Same instinct as a doctor ordering one test before booking"
+        },
+        {
+          "start": 30.54,
+          "end": 36.36,
+          "text": " surgery. Make one concrete example your first checkpoint, and let it decide whether the work grows."
+        },
+        {
+          "start": 36.36,
+          "end": 40.36,
+          "text": " Then came the publishing decision. At 09:10 you said, yes, publish"
+        },
+        {
+          "start": 40.36,
+          "end": 45.09,
+          "text": " the page once the preview check passes, a conditional yes rather than an"
+        },
+        {
+          "start": 45.09,
+          "end": 49.09,
+          "text": " open approval. The assistant's own message says it published after checking"
+        },
+        {
+          "start": 49.09,
+          "end": 54.18,
+          "text": " that the page loads, and skipped the motion preview you required. Eight minutes passed"
+        },
+        {
+          "start": 54.18,
+          "end": 57.45,
+          "text": " between your conditional go-ahead and the rollback record. The"
+        },
+        {
+          "start": 57.45,
+          "end": 62.18,
+          "text": " later preview check found the motion missing, and the rollback had finished at"
+        },
+        {
+          "start": 62.18,
+          "end": 67.63,
+          "text": " 09:18. That gap is time on the clock, not a measure of anyone's effort or"
+        },
+        {
+          "start": 67.63,
+          "end": 71.27,
+          "text": " of how long the page was broken. We don't know"
+        },
+        {
+          "start": 71.27,
+          "end": 75.63,
+          "text": " whether anyone saw the broken page, because the visitor logs are unavailable."
+        },
+        {
+          "start": 75.63,
+          "end": 81.45,
+          "text": " Nothing in the record explains why the preview was skipped, so I won't guess at what"
+        },
+        {
+          "start": 81.45,
+          "end": 85.45,
+          "text": " went on inside the assistant. And you don't need to state"
+        },
+        {
+          "start": 85.45,
+          "end": 90.18,
+          "text": " the condition more forcefully, because you'd already stated it clearly. The fix is"
+        },
+        {
+          "start": 90.18,
+          "end": 94.18,
+          "text": " on the assistant's side, like a gate that stays locked until"
+        },
+        {
+          "start": 94.18,
+          "end": 99.27,
+          "text": " the inspector signs off. Here's the experiment, and it's a proposal for your next"
+        },
+        {
+          "start": 99.27,
+          "end": 102.54,
+          "text": " release, not something the tape shows working yet. Have"
+        },
+        {
+          "start": 102.54,
+          "end": 107.27,
+          "text": " the assistant record a passing preview before publication can proceed. In the next"
+        },
+        {
+          "start": 107.27,
+          "end": 110.91,
+          "text": " release record, check that the preview result comes before the"
+        },
+        {
+          "start": 110.91,
+          "end": 114.55,
+          "text": " publication event, and if it doesn't, keep the release blocked."
+        }
+      ]
+    },
+    "expected": {
+      "decision": "accepted",
+      "opening_ok": true
+    },
+    "failures": [],
+    "supported": [
+      {
+        "id": "a-paraphrase-s1",
+        "quote": "Your first decision came before the",
+        "note": "a-1"
+      },
+      {
+        "id": "a-paraphrase-s2",
+        "quote": "Rather than rewrite the pipeline, the",
+        "note": "a-2, review:m1 action"
+      },
+      {
+        "id": "a-paraphrase-s3",
+        "quote": "No rewrite happened, and the original",
+        "note": "a-3"
+      },
+      {
+        "id": "a-paraphrase-s4",
+        "quote": "Nobody measured how long a rewrite",
+        "note": "HARD NEGATIVE (near unmeasured_as_measured / absent_cost_as_zero): review:m1 outcome"
+      },
+      {
+        "id": "a-paraphrase-s5",
+        "quote": "Same instinct as a doctor ordering",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "a-paraphrase-s6",
+        "quote": "Make one concrete example your first",
+        "note": "non-factual: advice, review:m1 lesson"
+      },
+      {
+        "id": "a-paraphrase-s7",
+        "quote": "Then came the publishing decision",
+        "note": "non-factual: connective tissue introducing moment 2"
+      },
+      {
+        "id": "a-paraphrase-s8",
+        "quote": "At 09:10 you said, yes, publish",
+        "note": "a-4; fact sheet: not unconditional approval"
+      },
+      {
+        "id": "a-paraphrase-s9",
+        "quote": "The assistant's own message says it",
+        "note": "a-5 (attributed to the assistant's message)"
+      },
+      {
+        "id": "a-paraphrase-s10",
+        "quote": "Eight minutes passed between your conditional",
+        "note": "HARD NEGATIVE (near interval_as_labor): 09:10 to 09:18 interval"
+      },
+      {
+        "id": "a-paraphrase-s11",
+        "quote": "The later preview check found the",
+        "note": "a-6"
+      },
+      {
+        "id": "a-paraphrase-s12",
+        "quote": "That gap is time on the",
+        "note": "HARD NEGATIVE (near interval_as_labor): review:m2 outcome"
+      },
+      {
+        "id": "a-paraphrase-s13",
+        "quote": "We don't know whether anyone saw",
+        "note": "HARD NEGATIVE (near absent_cost_as_zero): a-6, review:m2 outcome"
+      },
+      {
+        "id": "a-paraphrase-s14",
+        "quote": "Nothing in the record explains why",
+        "note": "HARD NEGATIVE (near invented_internals): review:m2 causal_basis"
+      },
+      {
+        "id": "a-paraphrase-s15",
+        "quote": "And you don't need to state",
+        "note": "HARD NEGATIVE (near blame_shift): review:m2 lesson, responsibility agent"
+      },
+      {
+        "id": "a-paraphrase-s16",
+        "quote": "The fix is on the assistant's",
+        "note": "non-factual: advice with analogy, review:m2 lesson"
+      },
+      {
+        "id": "a-paraphrase-s17",
+        "quote": "Here's the experiment, and it's a",
+        "note": "HARD NEGATIVE (near proposal_as_result): review:experiment framing"
+      },
+      {
+        "id": "a-paraphrase-s18",
+        "quote": "Have the assistant record a passing",
+        "note": "review:experiment change (proposal)"
+      },
+      {
+        "id": "a-paraphrase-s19",
+        "quote": "In the next release record, check",
+        "note": "review:experiment next_check (proposal)"
+      }
+    ]
+  },
+  {
+    "id": "b-paraphrase",
+    "kind": "synthetic-paraphrase",
+    "demo_case": "case-b",
+    "transcript": {
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.0,
+          "text": " Let's start with your latency call, when you told the assistant"
+        },
+        {
+          "start": 4.0,
+          "end": 9.09,
+          "text": " to skip the cache experiment for now and first check the slower request from"
+        },
+        {
+          "start": 9.09,
+          "end": 12.36,
+          "text": " the phone. That newer instruction is what to judge"
+        },
+        {
+          "start": 12.36,
+          "end": 17.09,
+          "text": " the work against, not the cache idea you set aside. And the assistant"
+        },
+        {
+          "start": 17.09,
+          "end": 22.54,
+          "text": " went with it, measuring the phone request instead. On the phone, end to end, the"
+        },
+        {
+          "start": 22.54,
+          "end": 26.18,
+          "text": " request took 4.2 seconds. The local handler on its own"
+        },
+        {
+          "start": 26.18,
+          "end": 30.54,
+          "text": " came in at 0.3 seconds. Those numbers draw the boundary in different"
+        },
+        {
+          "start": 30.54,
+          "end": 36.36,
+          "text": " places, the whole trip versus just the handler. Without a component-level network trace, nobody can say"
+        },
+        {
+          "start": 36.36,
+          "end": 40.36,
+          "text": " which piece accounts for the difference, or claim a cache would"
+        },
+        {
+          "start": 40.36,
+          "end": 45.09,
+          "text": " speed it up. It's like comparing a whole flight with the time spent"
+        },
+        {
+          "start": 45.09,
+          "end": 49.09,
+          "text": " taxiing. Getting the measurement straight before optimizing was the useful move."
+        },
+        {
+          "start": 49.09,
+          "end": 54.18,
+          "text": " Moment two is the release. Your condition was to ship only after the end-to-end"
+        },
+        {
+          "start": 54.18,
+          "end": 57.45,
+          "text": " phone check is in the release record. The tool"
+        },
+        {
+          "start": 57.45,
+          "end": 62.18,
+          "text": " record shows a commit, demo123, and no post-restart phone check. The assistant says"
+        },
+        {
+          "start": 62.18,
+          "end": 67.63,
+          "text": " it restarted the service, but only the commit is confirmed. It also told you it"
+        },
+        {
+          "start": 67.63,
+          "end": 71.27,
+          "text": " had not checked the phone after the restart. So the"
+        },
+        {
+          "start": 71.27,
+          "end": 75.63,
+          "text": " phone experience is unverified, and the record can't call the deployment a"
+        },
+        {
+          "start": 75.63,
+          "end": 81.45,
+          "text": " success or a failure. Why the check didn't happen isn't recorded either, and nothing in the"
+        },
+        {
+          "start": 81.45,
+          "end": 85.45,
+          "text": " record ties it to the missing trace from earlier. Treat a"
+        },
+        {
+          "start": 85.45,
+          "end": 90.18,
+          "text": " commit like a shipping label, and the phone check like seeing the package"
+        },
+        {
+          "start": 90.18,
+          "end": 94.18,
+          "text": " arrive. Until that phone check exists, your release condition is still"
+        },
+        {
+          "start": 94.18,
+          "end": 99.27,
+          "text": " open. My suggestion for the next patch review is a proposal, not a result"
+        },
+        {
+          "start": 99.27,
+          "end": 102.54,
+          "text": " the tape has shown. Track the commit receipt and"
+        },
+        {
+          "start": 102.54,
+          "end": 107.27,
+          "text": " the post-restart phone result as two separate acceptance checks. Before marking the running"
+        },
+        {
+          "start": 107.27,
+          "end": 113.09,
+          "text": " experience accepted, confirm both receipts are present, and if either is absent, leave the status unknown."
+        }
+      ]
+    },
+    "expected": {
+      "decision": "accepted",
+      "opening_ok": true
+    },
+    "failures": [],
+    "supported": [
+      {
+        "id": "b-paraphrase-s1",
+        "quote": "Let's start with your latency call",
+        "note": "b-1"
+      },
+      {
+        "id": "b-paraphrase-s2",
+        "quote": "That newer instruction is what to",
+        "note": "non-factual: advice, review:m1 lesson"
+      },
+      {
+        "id": "b-paraphrase-s3",
+        "quote": "And the assistant went with it",
+        "note": "b-2, review:m1 action"
+      },
+      {
+        "id": "b-paraphrase-s4",
+        "quote": "On the phone, end to end",
+        "note": "b-3"
+      },
+      {
+        "id": "b-paraphrase-s5",
+        "quote": "The local handler on its own",
+        "note": "b-3"
+      },
+      {
+        "id": "b-paraphrase-s6",
+        "quote": "Those numbers draw the boundary in",
+        "note": "b-2, b-3, review:m1 outcome"
+      },
+      {
+        "id": "b-paraphrase-s7",
+        "quote": "Without a component-level network trace, nobody",
+        "note": "HARD NEGATIVE (near invented_dependency / unmeasured_as_measured): b-3, review:m1 outcome"
+      },
+      {
+        "id": "b-paraphrase-s8",
+        "quote": "It's like comparing a whole flight",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "b-paraphrase-s9",
+        "quote": "Getting the measurement straight before optimizing",
+        "note": "non-factual: advice, review:m1 lesson"
+      },
+      {
+        "id": "b-paraphrase-s10",
+        "quote": "Moment two is the release",
+        "note": "non-factual: connective tissue introducing moment 2"
+      },
+      {
+        "id": "b-paraphrase-s11",
+        "quote": "Your condition was to ship only",
+        "note": "b-4"
+      },
+      {
+        "id": "b-paraphrase-s12",
+        "quote": "The tool record shows a commit",
+        "note": "b-6"
+      },
+      {
+        "id": "b-paraphrase-s13",
+        "quote": "The assistant says it restarted the",
+        "note": "HARD NEGATIVE (near report_as_fact / commit_as_restart): b-5, b-6, review:m2 outcome"
+      },
+      {
+        "id": "b-paraphrase-s14",
+        "quote": "It also told you it had",
+        "note": "b-5"
+      },
+      {
+        "id": "b-paraphrase-s15",
+        "quote": "So the phone experience is unverified",
+        "note": "HARD NEGATIVE (near unverified_as_failed): review:m2 outcome"
+      },
+      {
+        "id": "b-paraphrase-s16",
+        "quote": "Why the check didn't happen isn't",
+        "note": "HARD NEGATIVE (near invented_dependency): review:m2 causal_basis"
+      },
+      {
+        "id": "b-paraphrase-s17",
+        "quote": "Treat a commit like a shipping",
+        "note": "non-factual: analogy"
+      },
+      {
+        "id": "b-paraphrase-s18",
+        "quote": "Until that phone check exists, your",
+        "note": "review:m2 lesson"
+      },
+      {
+        "id": "b-paraphrase-s19",
+        "quote": "My suggestion for the next patch",
+        "note": "HARD NEGATIVE (near proposal_as_result): review:experiment framing"
+      },
+      {
+        "id": "b-paraphrase-s20",
+        "quote": "Track the commit receipt and the",
+        "note": "review:experiment change (proposal)"
+      },
+      {
+        "id": "b-paraphrase-s21",
+        "quote": "Before marking the running experience accepted",
+        "note": "review:experiment next_check (proposal)"
+      }
+    ]
+  }
+]

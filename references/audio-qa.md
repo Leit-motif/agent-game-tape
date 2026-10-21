@@ -10,6 +10,7 @@ accepts audio. Keep its metadata, downloaded file, full ASR transcript and a sep
 3. Run `game_tape.py audit-audio`. Its patterns flag obvious source recital, label read-outs, third-person
    framing and motive words. Its coverage flag is only a plausibility check of the last timestamp. It
    cannot prove every second was transcribed or that silence/music was interpreted correctly.
+   Then run `game_tape.py check-narration` for a [claim-level receipt](narration-check.md) of every sentence.
 4. Review the opening, middle and ending—and everything between them. Preserve all outputs, including
    disappointing ones. Do not cherry-pick a polished regeneration and erase the failed artifact.
 
@@ -27,6 +28,7 @@ for these strength changes:
 
 - assistant report → established fact;
 - absent evidence of cost → zero cost;
+- no measurement → a measured cost, saving or benefit;
 - unverified deployment → failed deployment;
 - elapsed interval → wasted labor or continuous outage;
 - overlapping workers → every second spent in parallel;
