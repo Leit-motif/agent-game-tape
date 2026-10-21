@@ -73,8 +73,23 @@ def focus_first_sentence(review):
     return base.replace(BEGIN, first)
 
 
+# v3 (H3, chosen from v0–v2 failures): every v0/v1 episode opened with a title line and a methodology overview
+# (opening failure); in v2 the same overview, pushed after the quote, left the checker unable to verify. The focus
+# asks for no overview of the session or description of the review before the first decision.
+NO_OVERVIEW = ('Do not give an overview of the session or describe the review; after at most a one-line title, '
+               'begin directly with the first decision in Game tape and cover the selected decisions in that order.')
+
+
+def focus_no_overview(review):
+    base = build_focus(review, FORMAT)
+    if BEGIN not in base:
+        raise ValueError('bundled Brief focus changed; v3 is defined against the frozen sentence')
+    return base.replace(BEGIN, NO_OVERVIEW)
+
+
 SOURCES = {'main': lambda b, r: narration(b, r, 'prose'), 'affirmative': narration_affirmative}
-FOCUSES = {'bundled': lambda r: build_focus(r, FORMAT), 'first-sentence': focus_first_sentence}
+FOCUSES = {'bundled': lambda r: build_focus(r, FORMAT), 'first-sentence': focus_first_sentence,
+           'no-overview': focus_no_overview}
 
 
 def prepare(args):
