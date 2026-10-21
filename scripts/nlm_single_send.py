@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Single-dispatch AUDIO kickoff adapter; never retry an uncertain mutation.
+"""Send one Gemini Notebook (formerly NotebookLM) audio request exactly once; never retry an uncertain send.
 
 Importing this module requires only the standard library. The caller owns a
 persistent pending intent and reconciliation; this is not server idempotency.
@@ -59,24 +59,24 @@ def _verify_package():
         distribution = importlib.metadata.distribution('notebooklm-mcp-cli')
         expected = _PINS.get(distribution.version)
         if expected is None:
-            raise UnsupportedClientError('Unsupported NotebookLM client version; no audio was sent.')
+            raise UnsupportedClientError('Unsupported Gemini Notebook client version; no audio was sent.')
         from notebooklm_tools.core import base, retry, studio
         for name, module in (('base', base), ('retry', retry), ('studio', studio)):
             path = Path(module.__file__).resolve()
             installed = Path(distribution.locate_file('notebooklm_tools/core/' + name + '.py')).resolve()
             if path != installed or hashlib.sha256(path.read_bytes()).hexdigest() != expected[name]:
-                raise UnsupportedClientError('NotebookLM source fingerprint mismatch; no audio was sent.')
+                raise UnsupportedClientError('Gemini Notebook client source fingerprint mismatch; no audio was sent.')
         return distribution.version, base, studio
     except SingleSendError:
         raise
     except Exception:
-        raise UnsupportedClientError('Pinned NotebookLM client is unavailable; no audio was sent.') from None
+        raise UnsupportedClientError('Pinned Gemini Notebook client is unavailable; no audio was sent.') from None
 
 
 def _verify_client(client):
     _, base, studio = _verify_package()
     if not isinstance(client, studio.StudioMixin):
-        raise UnsupportedClientError('Unsupported NotebookLM client instance; no audio was sent.')
+        raise UnsupportedClientError('Unsupported Gemini Notebook client instance; no audio was sent.')
     methods = {name: getattr(base.BaseClient, name) for name in (
         '_call_rpc', '_build_request_body', '_build_url', '_get_client',
         '_parse_response', '_extract_rpc_result',
@@ -86,12 +86,12 @@ def _verify_client(client):
         actual = getattr(client, name, None)
         if (not isinstance(actual, MethodType) or actual.__self__ is not client
                 or actual.__func__ is not expected):
-            raise UnsupportedClientError('NotebookLM client methods were replaced; no audio was sent.')
+            raise UnsupportedClientError('Gemini Notebook client methods were replaced; no audio was sent.')
         module = base if name != 'create_audio_overview' else studio
         if Path(inspect.getsourcefile(expected) or '').resolve() != Path(module.__file__).resolve():
-            raise UnsupportedClientError('NotebookLM method provenance mismatch; no audio was sent.')
+            raise UnsupportedClientError('Gemini Notebook client method provenance mismatch; no audio was sent.')
     if client.RPC_CREATE_STUDIO != 'R7cb6c' or client.STUDIO_TYPE_AUDIO != 1:
-        raise UnsupportedClientError('Unsupported NotebookLM audio RPC; no audio was sent.')
+        raise UnsupportedClientError('Unsupported Gemini Notebook audio RPC; no audio was sent.')
 
 
 def _original_bound_method(instance, owner, name):
@@ -292,7 +292,7 @@ def main(argv=None):
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument('--request', metavar='FILE', help='audio request JSON; caller must persist pending intent first')
     mode.add_argument('--check', action='store_true', help='check pinned runtime without loading auth or sending requests')
-    parser.add_argument('--environment-entrypoint', metavar='FILE', help='existing trusted Python CLI environment wrapper')
+    parser.add_argument('--environment-entrypoint', metavar='FILE', help=argparse.SUPPRESS)  # advanced; see references/notebooklm.md
     args = parser.parse_args(argv)
     try:
         request = None if args.check else _read_request(args.request)
