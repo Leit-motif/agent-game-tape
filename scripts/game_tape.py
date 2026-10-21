@@ -312,6 +312,29 @@ def audit_audio(args):
     return 0
 
 
+def check_narration(args):
+    import claim_check  # lazy: claim_check imports this module
+    if args.run:
+        folder = Path(args.run).expanduser().resolve()
+        evidence, review = folder / 'evidence.json', folder / 'review.json'
+    elif args.evidence and args.review:
+        evidence, review = Path(args.evidence), Path(args.review)
+    else:
+        raise ValueError('give --run, or both --evidence and --review')
+    bundle, review = load(evidence), load(review)
+    problems = validate(bundle, review)
+    if problems or review['status'] != 'reviewed':
+        raise ValueError('check-narration needs a valid reviewed review.json: ' + '; '.join(problems or [review['status']]))
+    receipt = claim_check.check(args.transcript, bundle, review, claim_check.ClaudeCLIBackend(model=args.model))
+    save(args.out, receipt)
+    counts = {}
+    for claim in receipt['claims']:
+        counts[claim['label']] = counts.get(claim['label'], 0) + 1
+    print(json.dumps({'decision': receipt['decision'], 'reasons': receipt['reasons'], 'labels': counts,
+                      'opening_ok': (receipt['opening'] or {}).get('ok'), 'out': str(Path(args.out).resolve())}, indent=2))
+    return 0 if receipt['decision'] == 'accepted' else 1
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest='command', required=True)
@@ -341,6 +364,14 @@ def main():
     p.add_argument('--duration', type=float, required=True, help='actual duration from ffprobe, seconds')
     p.add_argument('--out', required=True)
     p.set_defaults(fn=audit_audio)
+    p = sub.add_parser('check-narration', help='claim-level check of an ASR transcript against evidence and review; never listens')
+    p.add_argument('--run', help='run folder with evidence.json and review.json')
+    p.add_argument('--evidence')
+    p.add_argument('--review')
+    p.add_argument('--transcript', required=True, help='whisper JSON with segments')
+    p.add_argument('--out', required=True)
+    p.add_argument('--model', default='claude-opus-5-5')
+    p.set_defaults(fn=check_narration)
     args = parser.parse_args()
     try:
         return args.fn(args) or 0

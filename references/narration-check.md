@@ -1,0 +1,83 @@
+# Claim-level narration check
+
+`game_tape.py check-narration` compares a complete ASR transcript of a narration with the run's
+`evidence.json` and `review.json`. It emits a receipt and a decision. It never accepts audio on its own
+authority: an `accepted` receipt means that this checker found no flagged claim and a valid opening. It does
+not mean a person listened to the sound or that the transcript is complete.
+
+```bash
+python3 scripts/game_tape.py check-narration --run /private/run \
+  --transcript /private/run/audio.json --out /private/run/narration-check.json
+```
+
+Exit status: 0 accepted, 1 rejected or unverified, 2 usage or input error.
+
+## Pipeline
+
+1. **Sentences (deterministic).** ASR segments are joined and split into sentences. Each sentence gets
+   the start of its first overlapping segment and the end of its last; no sub-segment precision is claimed.
+2. **Claims and roles (semantic).** One backend call receives the numbered sentences, every evidence event,
+   the selected moments, the experiment and the strength-change taxonomy. It returns a role for each
+   sentence and atomic consequential claims, each tied to sentence ids, evidence ids and a label.
+3. **Validation (deterministic).** Sentence ids, evidence ids, labels and taxonomy slugs must exist. Every
+   sentence must be covered by a claim, except greetings before the first other sentence. A `supported` claim must cite evidence.
+   Malformed or incomplete backend output makes the decision `unverified`, never `accepted`.
+4. **Opening (deterministic over roles).** Greetings and pure connective tissue may come first. The first
+   other sentence must have role `moment:1`, the first selected decision. Methodology, source-collection,
+   overview or any other role there fails the opening.
+5. **Decision.** `rejected` if any claim is `strengthened:*` or `unsupported`, or the opening fails.
+   `unverified` if the backend output is invalid. Otherwise `accepted`.
+
+## Labels
+
+- `supported`: the cited evidence or reviewed text entails the claim at the same strength. Paraphrase,
+  rounding-free restatement and omission are allowed.
+- `strengthened:<type>`: a real fact restated more strongly than the record allows.
+- `unsupported`: an event, metric, motive, cause or actor the record does not contain.
+- `non-factual`: advice, proposals, framing, encouragement and questions. Advice narrated with a measured
+  benefit is not non-factual: it is `strengthened:proposal_as_result`.
+
+Evidence ids are the event ids in `evidence.json` plus `review:m<N>` (moment N's reviewed text),
+`review:experiment` and `review:blind_spots`.
+
+Sentence roles: `greeting`, `methodology`, `moment:<N>`, `experiment`, `other`.
+
+## Strength-change taxonomy
+
+From [full-episode QA](audio-qa.md):
+
+| Slug | Strength change |
+|---|---|
+| `report_as_fact` | assistant report → established fact |
+| `absent_cost_as_zero` | absent evidence of cost → zero cost |
+| `unmeasured_as_measured` | no measurement → a measured cost, saving or benefit |
+| `unverified_as_failed` | unverified deployment → failed (or successful) deployment |
+| `interval_as_labor` | elapsed interval → wasted labor, task duration or continuous outage |
+| `overlap_as_parallel` | overlapping workers → every second spent in parallel |
+| `commit_as_restart` | commit receipt → proof a running service restarted |
+| `invented_dependency` | adjacent qualifications → an invented dependency |
+| `invented_internals` | inadequate verification → a made-up explanation of model internals |
+| `blame_shift` | agent execution failure → an indictment of the human's instruction |
+| `proposal_as_result` | proposed advice → a measured or observed result |
+| `other` | any other strength change; the rationale must name it |
+
+## Receipt
+
+`agent-game-tape/narration-check-v1` records the decision and reasons; SHA-256 hashes of the transcript
+file, evidence, review, prompt and raw backend response; the backend name and model; every sentence with
+timestamps; every claim row (sentence ids, start, end, text, label, evidence ids, moment, rationale); the
+opening result; and the limits below.
+
+## Backends
+
+The default backend runs the local Claude CLI (`claude -p --model claude-opus-5-5`) in safe mode (no CLAUDE.md, memory, skills,
+plugins or hooks) with a minimal system prompt, tools disabled, no session persistence and structured JSON output, and removes `ANTHROPIC_API_KEY` from its environment so
+it uses the existing subscription login rather than a paid key. Tests use an offline fake backend. A backend
+is any object with `name`, `model` and `complete(prompt, schema) -> dict`.
+
+## Limits
+
+The semantic step is a model judgment and can vary between runs; [the checker evaluation](checker-eval.md)
+measures that on a small labelled set. Sentence-level timestamps are as coarse as the ASR segments. A
+transcript cannot reveal sound quality, and ASR errors can look like narration errors. An `accepted` receipt
+does not replace the editorial receipt in [full-episode QA](audio-qa.md).

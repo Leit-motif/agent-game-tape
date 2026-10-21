@@ -119,7 +119,8 @@ python3 scripts/notebooklm.py wait /private/path/game-tape/run-01 --download
 
 Only the prepared narration file is uploaded. The notebook remains private unless you separately change
 its sharing. Full-episode transcription and [semantic QA](references/audio-qa.md) are required before
-calling the narration accurate. Opening checks miss later drift.
+calling the narration accurate. Opening checks miss later drift. `game_tape.py check-narration` runs a
+[claim-level check](references/narration-check.md) of the transcript against the evidence and review.
 
 **NotebookLM is generative.** Format, relative length, language, focus and source selection are real controls;
 exact minutes, fixed voices, deterministic seeds and verbatim scripts are not supported promises. You can

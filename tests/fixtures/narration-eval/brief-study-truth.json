@@ -1,0 +1,108 @@
+[
+  {
+    "id": "brief-case-a",
+    "kind": "brief-study",
+    "demo_case": "case-a",
+    "external_transcript": "brief-case-a",
+    "external_sha256": "f11e70679c31c809a6966630b85d5498f633066e90076916c142106d14abfa66",
+    "expected": {
+      "decision": "rejected",
+      "opening_ok": false
+    },
+    "failures": [
+      {
+        "id": "A-F1",
+        "quote": "exactly how much time that saved you",
+        "expected_type": "unmeasured_as_measured",
+        "note": "validation.md 00:32.840-00:37.000: presupposes a time saving the record does not establish"
+      },
+      {
+        "id": "A-F2",
+        "quote": "forcing an 8-minute rollback",
+        "expected_type": "interval_as_labor",
+        "note": "validation.md 00:59.320-01:09.240: instruction-to-rollback interval became a rollback duration"
+      }
+    ],
+    "supported": [
+      {
+        "id": "A-S1",
+        "quote": "before changing the rest, show that the new filter preserves the failing example",
+        "note": "verbatim human quote a-1 (independent review gate 1)"
+      },
+      {
+        "id": "A-S3",
+        "quote": "publish the page once the preview check passes",
+        "note": "conditional approval remains conditional (a-4)"
+      },
+      {
+        "id": "A-S4",
+        "quote": "we don't know for sure if anyone actually saw it",
+        "note": "visitor exposure stays unknown; rhetorical why asserts no internal cause (independent review)"
+      },
+      {
+        "id": "A-S5",
+        "quote": "That is a real execution failure.",
+        "note": "review verdict: agent failure"
+      },
+      {
+        "id": "A-S6",
+        "quote": "require the assistant to record a passing preview check before publication",
+        "note": "the single proposed experiment, framed as a proposal (independent review)"
+      }
+    ]
+  },
+  {
+    "id": "brief-case-b",
+    "kind": "brief-study",
+    "demo_case": "case-b",
+    "external_transcript": "brief-case-b",
+    "external_sha256": "64a20c38292a9bca9d620ab6efeb2a03095970aff1bd6fd2440e8e56e4e16822",
+    "expected": {
+      "decision": "rejected",
+      "opening_ok": false
+    },
+    "failures": [],
+    "supported": [
+      {
+        "id": "B-S1",
+        "quote": "skip the cache experiment for now, first check the slower request from the phone",
+        "note": "verbatim human quote b-1"
+      },
+      {
+        "id": "B-S3",
+        "quote": "we simply can't establish what's causing the delay",
+        "note": "validation.md: no invented component-level cause"
+      },
+      {
+        "id": "B-S4",
+        "quote": "absolutely a great call by you",
+        "note": "review verdict: good call"
+      },
+      {
+        "id": "B-S5",
+        "quote": "ship only after the end-to-end phone check is in the release record",
+        "note": "verbatim human condition b-4"
+      },
+      {
+        "id": "B-S6",
+        "quote": "the assistant reported a commit and a service restart",
+        "note": "validation.md: restart kept as an assistant report"
+      },
+      {
+        "id": "B-S7",
+        "quote": "Our tool confirms the commit, sure, but that restart is just an unverified claim",
+        "note": "validation.md: confirmed commit versus merely reported restart"
+      },
+      {
+        "id": "B-S8",
+        "quote": "why do we assume the engine is actually running",
+        "note": "validation.md: unknown running outcome preserved"
+      },
+      {
+        "id": "B-S9",
+        "quote": "keep the commit receipt and the post-restart phone result as two separate acceptance checks",
+        "note": "the single proposed experiment; preserves unknown status"
+      }
+    ]
+  }
+]
