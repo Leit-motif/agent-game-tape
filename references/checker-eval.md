@@ -114,3 +114,25 @@ backend output** (decision precedence), not a semantic miss.
 Round-2 change: coverage gaps alone no longer hide an established rejection. When the only validation problems
 are uncovered sentences and the roles are valid, a failed opening or a flagged claim still rejects, and the
 gaps are listed. A coverage gap can never lead to acceptance; with no established failure it stays `unverified`.
+
+### Round 2 — checker at `416a878` (clean tree): **passed the bar**
+
+| Measure | Result |
+|---|---|
+| Labelled failures caught | 48/48 (16/16 in every run) |
+| False flags on labelled-supported items | 0/969 |
+| Strength-change type matched | 36/36 |
+| Decisions correct | 54/54; all 18 cases stable |
+| Errors / `unverified` | 0 / 0 |
+
+Both real Brief transcripts were rejected in every run for the reasons the human review found; all four
+faithful paraphrases were accepted in every run. No round-2 receipt contained an uncovered sentence, so the
+round-2 code path was not exercised: this pass also reflects run-to-run variation, and the round-1 failure
+mode would now reject instead of returning `unverified`. One unlabelled flag appeared on Case A (round 1:
+three), on a sentence the frozen labels left out as borderline; it does not affect the bar.
+
+**What this establishes:** on this small, fully seen set (two fictional scenarios, one renderer, Brief
+length), the checker separates labelled strength changes and preambles from faithful narration with no
+false flags and stable verdicts. Directional, development-set evidence: no held-out set, no private sessions,
+no Deep Dive-length transcripts, no sound. Treat a rejection as actionable and an acceptance as strong but
+not proof; new failure types should be added as cases before they are trusted.
