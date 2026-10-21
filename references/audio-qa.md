@@ -1,7 +1,11 @@
 # Full-episode QA
 
-Generation status and editorial acceptance are different observations. The publisher never automatically
-accepts audio. Keep its metadata, downloaded file, full ASR transcript and a separate editorial receipt.
+A Gemini Notebook (formerly NotebookLM) episode is generated from the narration, not read from it. Hosts
+can drift: round a number up, invent a cause, or turn advice into a result. This page is how to check the
+whole episode before calling it accurate.
+
+"Generated" and "accepted" are separate. The publisher never accepts audio automatically. Keep its
+metadata, the downloaded file, the full ASR transcript and a separate editorial receipt.
 
 ## Triage with code
 
@@ -11,7 +15,7 @@ accepts audio. Keep its metadata, downloaded file, full ASR transcript and a sep
    framing and motive words. Its coverage flag is only a plausibility check of the last timestamp. It
    cannot prove every second was transcribed or that silence/music was interpreted correctly.
    Then run `game_tape.py check-narration` for a [claim-level receipt](narration-check.md) of every sentence.
-4. Review the opening, middle and ending—and everything between them. Preserve all outputs, including
+4. Review the opening, middle, ending and everything between them. Preserve all outputs, including
    disappointing ones. Do not cherry-pick a polished regeneration and erase the failed artifact.
 
 Example external tools (installed separately; these are not Python package dependencies):
@@ -57,10 +61,10 @@ Write a local `editorial-review.md` with:
 - `accepted`, `rejected`, or `unverified`, with the reason and the reviewer.
 
 A material invented event, motive, metric, causal mechanism or actor attribution rejects the episode.
-Stylistic preferences are separate from factual vetoes. A clean regex scan or plausible transcript end
+Stylistic preferences never reject an episode on their own; factual failures do. A clean regex scan or plausible transcript end
 cannot certify accuracy. A short source packet and polite focus prompt reduce opportunities for drift;
 they are not a substitute for this check.
 
 Use [the fixed evaluation protocol](evaluation-protocol.md) when comparing variants. Keep the same facts,
 selection, focus, source count, language and format while testing one renderer change. Report every case,
-small-sample limitations and what was not checked. A passed local unit test is not a NotebookLM behavior result.
+small-sample limitations and what was not checked. A passed local unit test is not evidence of how Gemini Notebook behaves.

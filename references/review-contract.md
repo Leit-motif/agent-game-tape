@@ -1,5 +1,9 @@
 # Review contract
 
+After `prepare` collects your sessions, the coding agent picks the moments worth coaching on and records
+them in `review.json`. This page defines what goes in that file and how to judge each moment fairly.
+The narration sent to Gemini Notebook (formerly NotebookLM) is rendered from it.
+
 Write `review.json` next to the prepared `evidence.json`. The coding agent does the judgment; Python
 checks structure, identities, quoted spans, and run integrity. Passing Python is not semantic acceptance.
 For a complete fictional example, run `examples/make_demo.py` and read its generated review.

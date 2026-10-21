@@ -1,5 +1,13 @@
 # Brief-preset validation — fixed before generation
 
+> **Historical protocol.** This study ran once, on 2026-10-19, and is closed. Its question was whether the
+> short Brief audio format from Gemini Notebook (formerly NotebookLM) would narrate two fictional cases
+> faithfully. It did not: both episodes were rejected, and the results are in [validation.md](validation.md).
+> The text below is the protocol exactly as committed before generation. It is kept for the record, not as
+> current instructions.
+>
+> *Naming note:* NotebookLM was renamed Gemini Notebook. This record keeps the name used at the time.
+
 The earlier source-renderer comparison failed: the complete Case A fielded and prose narrations both
 scored 4/10 and contained material unsupported claims. The intended four-output trial also suffered a
 transport-integrity failure: one failed command left four remote artifacts. That trial is not relabeled

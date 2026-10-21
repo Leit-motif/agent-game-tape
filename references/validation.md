@@ -1,5 +1,27 @@
 # Validation status
 
+## In short
+
+- **What was tested:** the local report, the claim checker (`check-narration`), and raw audio from Gemini
+  Notebook (formerly NotebookLM) on two fictional cases, in both Deep Dive and Brief formats.
+- **What passed:** the local report is stable. The claim checker caught 48 of 48 labelled errors, flagged
+  0 of 969 faithful claims, and gave the same verdict on every case across three runs. See the
+  [checker evaluation](checker-eval.md).
+- **What failed:** raw Gemini Notebook narration added claims the evidence did not support in both Deep Dive
+  trials and both fictional Brief episodes. Full-episode review caught every one of them.
+- **What it means for you:** treat the local report as the reliable output. Audio is experimental. Run the
+  checks on each episode before you trust it, and expect some episodes to be rejected.
+
+*Naming note:* NotebookLM was renamed Gemini Notebook. This record keeps the name used at the time.
+
+*Terms used below:* arm = one variant in a comparison; frozen = fixed before any output was seen;
+veto = a single failure that rejects an episode regardless of its total score; admission = the
+preconditions checked before a study may start; ASR = automatic speech recognition (transcription).
+
+The full record follows, unchanged.
+
+---
+
 **Released 2026-10-21: local report stable, NotebookLM audio experimental.** Unit tests and source cleanup
 do not establish NotebookLM behavior. This document reports what was actually tested, including negative results.
 

@@ -1,14 +1,21 @@
 # Claim-level narration check
 
-`game_tape.py check-narration` compares a complete ASR transcript of a narration with the run's
-`evidence.json` and `review.json`. It emits a receipt and a decision. It never accepts audio on its own
-authority: an `accepted` receipt means that this checker found no flagged claim and a valid opening. It does
-not mean a person listened to the sound or that the transcript is complete.
+An audio episode can sound right and still get facts wrong. `game_tape.py check-narration` reads a complete
+ASR transcript of the episode, splits it into sentences, and checks every factual claim against the run's
+`evidence.json` and `review.json`. It writes a receipt that lists each claim, the evidence it relies on, and
+a decision: `accepted`, `rejected` or `unverified`.
+
+`accepted` means this checker found no flagged claim and the episode opened on the first selected moment.
+It does not mean a person listened to the sound or that the transcript is complete. The checker never
+accepts audio on its own authority.
 
 ```bash
 python3 scripts/game_tape.py check-narration --run /private/run \
   --transcript /private/run/audio.json --out /private/run/narration-check.json
 ```
+
+The transcript is usually ASR of a Gemini Notebook (formerly NotebookLM) episode, but any narration of the
+same review can be checked.
 
 Exit status: 0 accepted, 1 rejected or unverified, 2 usage or input error.
 
@@ -64,20 +71,38 @@ From [full-episode QA](audio-qa.md):
 ## Receipt
 
 `agent-game-tape/narration-check-v1` records the decision and reasons; SHA-256 hashes of the transcript
-file, evidence, review, prompt and raw backend response; the backend name and model; every sentence with
+file, evidence, review, prompt and raw backend response; the backend name, model and model status; every sentence with
 timestamps; every claim row (sentence ids, start, end, text, label, evidence ids, moment, rationale); the
 opening result; and the limits below.
 
+## Model
+
+The checker uses the tested model (`claude-opus-5-5`, set in `scripts/models.py`) by default. Its evaluation
+results were measured with that model only. `--model` selects another one:
+
+```bash
+python3 scripts/game_tape.py check-narration --run /private/run \
+  --transcript /private/run/audio.json --out /private/run/narration-check.json --model OTHER_MODEL
+```
+
+The receipt records `backend.model` and `backend.model_status`. `model_status` is `tested` for the tested
+model and `unvalidated` for anything else. With an unvalidated model the command also prints a warning:
+checker results were validated only with the tested model, so treat that receipt as unvalidated.
+
 ## Backends
 
-The default backend runs the local Claude CLI (`claude -p --model claude-opus-5-5`) in safe mode (no CLAUDE.md, memory, skills,
-plugins or hooks) with a minimal system prompt, tools disabled, no session persistence and structured JSON output, and removes `ANTHROPIC_API_KEY` from its environment so
-it uses the existing subscription login rather than a paid key. Tests use an offline fake backend. A backend
-is any object with `name`, `model` and `complete(prompt, schema) -> dict`.
+The default backend runs the local Claude CLI (`claude -p --model MODEL`) in safe mode (no CLAUDE.md,
+memory, skills, plugins or hooks) with a minimal system prompt, tools disabled, no session persistence and
+structured JSON output. It removes `ANTHROPIC_API_KEY` from its environment so it uses the existing
+subscription login rather than a paid key. Tests use an offline fake backend. A backend is any object with
+`name`, `model` and `complete(prompt, schema) -> dict`.
 
 ## Limits
 
-The semantic step is a model judgment and can vary between runs; [the checker evaluation](checker-eval.md)
-measures that on a small labelled set. Sentence-level timestamps are as coarse as the ASR segments. A
+The semantic step is a model judgment and can vary between runs. On its pre-registered evaluation the
+checker caught 48 of 48 labelled failures, flagged 0 of 969 faithful claims, made 54 of 54 correct
+decisions, and gave the same result for all 18 cases across 3 runs. Read that as directional: it is a small
+fictional development set with two scenarios at Brief length and no held-out set. Details are in
+[the checker evaluation](checker-eval.md). Sentence-level timestamps are as coarse as the ASR segments. A
 transcript cannot reveal sound quality, and ASR errors can look like narration errors. An `accepted` receipt
 does not replace the editorial receipt in [full-episode QA](audio-qa.md).
