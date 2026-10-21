@@ -1,7 +1,17 @@
 # Validation status
 
-**Not ready for public release yet.** Unit tests and source cleanup do not establish NotebookLM behavior.
-This document reports what was actually tested, including negative results.
+**Released 2026-10-21: local report stable, NotebookLM audio experimental.** Unit tests and source cleanup
+do not establish NotebookLM behavior. This document reports what was actually tested, including negative results.
+
+## Release decision
+
+The earlier gate held publication until raw NotebookLM output passed a fidelity bar. That tested the
+renderer, which this package does not control and cannot seed, script or pin. What the package does
+control is the review: evidence collection, exact-quote validation, the local report, and full-episode QA
+that rejects an embellished narration. Both Brief episodes below were caught and rejected by that QA, which
+is the safeguard working as designed. The skill ships with the local report as its primary artifact and
+audio labeled experimental; per-episode QA, not a one-time renderer trial, decides whether a given episode
+is accurate. The failed results below are preserved unchanged. Narration fidelity remains open work.
 
 ## Source-renderer test: failed
 

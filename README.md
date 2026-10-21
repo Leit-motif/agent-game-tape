@@ -8,8 +8,15 @@ what you asked, what the assistant did, what the evidence supports, and one move
 Built as a portable skill for **Claude Code and Codex**. OpenClaw session exports are an optional third
 adapter. NotebookLM turns the reviewed material into audio; it does not decide what happened.
 
-> **Release gate:** publication is held while the behavioral checks run. See the
-> [actual results and remaining gate](references/validation.md). No reliability claim is inferred from unit tests.
+Working with AI is a skill, and like any skill it improves fastest when you watch your own tape. Your
+conversations with coding agents already record every call you made: where a clear instruction paid off,
+where a vague one cost a rework, where you trusted a "done" you never checked. Game tape turns yesterday's
+sessions into a short, honest debrief so you get better at steering AI, not just at prompting it.
+
+> **Status:** the local report is the product and is ready to use. NotebookLM audio is **experimental**:
+> in our tests it sometimes embellished numbers or opened with a generic preamble, which is exactly why the
+> skill transcribes and checks every episode against the evidence before calling it accurate.
+> [What was tested](references/validation.md).
 
 ## What you get
 
