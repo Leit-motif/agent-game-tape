@@ -1,155 +1,191 @@
 # Agent Game Tape
 
-**Review your human–AI sessions like an athlete reviewing the tape.**
+[![Offline tests](https://github.com/Leit-motif/agent-game-tape/actions/workflows/tests.yml/badge.svg)](https://github.com/Leit-motif/agent-game-tape/actions/workflows/tests.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Not a productivity score, a code review, or a blow-by-blow recap. Find the calls that changed an outcome:
-what you asked, what the assistant did, what the evidence supports, and one move worth practicing next time.
+**Review your human–AI sessions like an athlete reviews game tape.**
 
-Built as a portable skill for **Claude Code and Codex**. OpenClaw session exports are an optional third
-adapter. NotebookLM turns the reviewed material into audio; it does not decide what happened.
+Your coding-agent transcripts already record every call you made: the clear instruction that paid off,
+the vague one that cost a rework, the "done" you never checked. Agent Game Tape turns a day of those
+sessions into a short, evidence-backed debrief so you get better at steering AI.
 
-Working with AI is a skill, and like any skill it improves fastest when you watch your own tape. Your
-conversations with coding agents already record every call you made: where a clear instruction paid off,
-where a vague one cost a rework, where you trusted a "done" you never checked. Game tape turns yesterday's
-sessions into a short, honest debrief so you get better at steering AI, not just at prompting it.
+The local report is the product. Every lesson cites exact quotes and events from your own sessions. An
+optional Gemini Notebook (formerly NotebookLM) audio episode can retell it, and that episode is checked
+claim by claim against the evidence (`check-narration`) before anyone calls it accurate.
 
-> **Status:** the local report is the product and is ready to use. NotebookLM audio is **experimental**:
-> in our tests it sometimes embellished numbers or opened with a generic preamble, which is exactly why the
-> skill transcribes and checks every episode against the evidence before calling it accurate.
-> [What was tested](references/validation.md).
+## Quickstart (about 60 seconds)
 
-## What you get
+You need Python 3.10+ and [Claude Code](https://docs.claude.com/en/docs/claude-code). There are no
+Python dependencies and no API keys.
 
-```text
-Local session logs → attributed evidence → selected coaching moments → local report
-                                                             └── optional NotebookLM audio → full narration QA
-```
-
-- A private, evidence-linked report with exact human quotes and supporting events.
-- Human steering separated from agent execution and system failures. A bad outcome is not automatically
-  your bad call.
-- A small set of lessons—not a mandatory daily podcast or an invented fault on a quiet day.
-- A narration-ready source file without the raw transcript, rulebook, coverage inventory, or audit labels.
-- Explicit source/prompt hashes and artifact ids. “Generated” never silently means “quality accepted.”
-
-## Install the skill
-
-Python **3.10+** is the only local requirement. Keep the clone; skill links refer to it.
+**1. Clone and install as a Claude Code skill.** Keep the clone; the skill link points at it.
 
 ```bash
 git clone https://github.com/Leit-motif/agent-game-tape.git
 cd agent-game-tape
-```
-
-**Claude Code — personal skill:**
-
-```bash
 mkdir -p ~/.claude/skills
 ln -s "$(pwd)" ~/.claude/skills/agent-game-tape
 ```
 
-Then ask Claude Code: `/agent-game-tape Review yesterday's sessions. Start with a local report.`
-
-**Codex — personal skill:**
+**2. Check your setup.** `doctor` writes nothing and makes no network calls of its own (it asks the
+`claude` CLI for its version and login status). It tells you what is missing and what to do next.
 
 ```bash
-mkdir -p ~/.agents/skills
-ln -s "$(pwd)" ~/.agents/skills/agent-game-tape
+python3 scripts/game_tape.py doctor
 ```
 
-Then ask Codex: `$agent-game-tape Review yesterday's sessions. Start with a local report.`
-
-For project-scoped installation, use `.claude/skills/agent-game-tape` or
-`.agents/skills/agent-game-tape` inside that project instead. Copying the skill directory also works where
-symlinks are inconvenient. Do not overwrite an existing installation. Start/reload the host if it has not
-refreshed skill discovery. See [host and transcript details](references/adapters.md).
-
-The agent does the reading and judgment. The helpers handle deterministic collection, quote validation,
-rendering and optional audio execution. No model API key or additional paid model service is required.
-
-## Try it without any real sessions
-
-The demo is entirely fictional and makes no network requests:
+**3. Try the demo.** Entirely fictional data, no account, no network.
 
 ```bash
 python3 examples/make_demo.py --out /tmp/game-tape-demo
 python3 scripts/game_tape.py render /tmp/game-tape-demo/case-a
+open /tmp/game-tape-demo/case-a/report.md   # or any Markdown viewer
 ```
 
-Read `/tmp/game-tape-demo/case-a/report.md`. It contains a successful regression-first instruction and a
-publication condition the assistant failed to follow—not an accusation that the human should have asked harder.
-The [frozen fact sheet](examples/fact-sheet.md) makes its factual boundaries inspectable.
+The demo shows one good call (a regression check that kept a rewrite off the table) and one agent
+failure (publishing before a preview check the human had asked for). Its
+[fact sheet](examples/fact-sheet.md) spells out what the record does and does not support.
 
-## Run locally
+**4. Review your own sessions.** Start or restart Claude Code, then ask:
 
-Normally the skill handles these commands. For direct use:
+```text
+/agent-game-tape review yesterday's sessions
+```
+
+On first use the skill runs `doctor` and walks you through anything missing. Reports are written under
+`~/.agent-game-tape` (override with `$GAME_TAPE_HOME`), never inside the repository.
+
+<details>
+<summary>Using Codex instead (or as well)</summary>
 
 ```bash
-python3 scripts/game_tape.py prepare \
-  --day yesterday --timezone America/New_York \
-  --out /private/path/game-tape/run-01
+cd agent-game-tape   # your clone
+mkdir -p ~/.agents/skills
+ln -s "$(pwd)" ~/.agents/skills/agent-game-tape
 ```
 
-Use **your** timezone; the example is not a preference the skill assumes. Explicit dates, a shifted day
-boundary, transcript roots and a rules file are supported. Default discovery reads Claude Code and Codex
-local stores, honoring `CLAUDE_CONFIG_DIR` and `CODEX_HOME`. It does not SSH to other machines or read
-OpenClaw's live database. Prior context can inform the review without becoming a new in-window moment.
+Then ask Codex: `$agent-game-tape review yesterday's sessions`. For project-scoped installs, use
+`.claude/skills/` or `.agents/skills/` inside that project. OpenClaw exports are also supported. See
+[hosts and transcript adapters](references/adapters.md).
 
-Have your agent read the evidence and write `review.json` using the
-[review contract](references/review-contract.md), then:
+</details>
+
+## How it works
+
+```mermaid
+flowchart LR
+    A["Local transcripts<br/>Claude Code, Codex"] --> B["prepare<br/>collect, no network"]
+    B --> C["Agent review<br/>exact quotes"]
+    C --> D["render<br/>validate"]
+    D --> E["Local report"]
+    D -. optional .-> F["Gemini Notebook<br/>audio episode"]
+    F --> G["check-narration<br/>claim by claim"]
+    G --> H{"accepted or<br/>rejected"}
+```
+
+The agent you already use does the reading and judgment. The Python helpers do the deterministic parts:
+collection, exact-quote validation, rendering, the optional audio upload, and the claim check.
+
+## What you get
+
+- A private report with zero to five moments that changed an outcome, each tied to your exact words
+  and the events that followed.
+- Human steering separated from agent execution and system failures. A bad result is not automatically
+  your bad call.
+- At most one concrete experiment for your next session, with a way to tell whether it worked.
+- An honest abstention on a quiet or thin day instead of an invented fault.
+- A narration-ready source file that leaves out the raw transcript, rules and audit labels.
+
+## Audio (optional)
+
+Audio needs the separate [`notebooklm-mcp-cli`](https://github.com/jacob-bd/gemini-notebook-mcp-cli)
+client (`nlm`), installed and logged in by you. The calling agent chooses the controls at render time.
+They mirror the Customize Audio Overview dialog:
+
+| Control | Values | Default |
+|---|---|---|
+| `--format` | `deep_dive`, `brief`, `critique`, `debate` | `deep_dive` |
+| `--length` | `short`, `default`, `long` | `default` |
+| `--language` | language code, e.g. `en`, `es`, `ja` | `en` |
+| `--source PATH` | repeatable; extra files to upload. `narration` means the rendered narration | narration only |
+| `--focus TEXT` or `--focus-file PATH` | your focus prompt | bundled coaching focus |
+
+Web research ("discover sources") is always off. Outside facts Gemini Notebook pulls in carry no evidence
+ids, so the episode could no longer be checked claim by claim against your sessions. Raw evidence,
+`review.json` and rules files are refused as sources.
 
 ```bash
-python3 scripts/game_tape.py render /private/path/game-tape/run-01
+python3 scripts/game_tape.py render RUN --format brief --length short
+python3 scripts/notebooklm.py start RUN --allow-upload
+python3 scripts/notebooklm.py wait RUN --download
+# transcribe RUN/audio.m4a locally (e.g. whisper, JSON output), then:
+python3 scripts/game_tape.py check-narration --run RUN \
+  --transcript RUN/audio.json --out RUN/narration-check.json
 ```
 
-The starter rubric is customizable. Supply the standards actually applicable to your work with
-`--rules /path/to/rules.json`; a sample is in `references/rules.json`. Don't retrospectively grade someone
-against rules they had not adopted. Sparse evidence is a reason to abstain, not pad the review.
+Upload happens only with `--allow-upload`, and only the sources recorded in the run's manifest. Each
+audio request is sent at most once, so a network error never silently creates duplicate episodes.
+`check-narration` exits 0 for `accepted` and 1 for `rejected` or `unverified`. Exact minutes, fixed
+voices and verbatim scripts are not controls the service offers. Details:
+[Gemini Notebook controls and execution](references/notebooklm.md) and
+[full-episode QA](references/audio-qa.md).
 
-## Optional NotebookLM audio
+## How we know the checker works
 
-Install/authenticate the separate [NotebookLM CLI](https://github.com/jacob-bd/gemini-notebook-mcp-cli)
-first. Check [real controls and execution](references/notebooklm.md), then explicitly request audio after
-reviewing what will be uploaded:
+The narration checker was evaluated against a pass bar written down before it was ever run: catch
+every labelled failure, flag no faithful claim, and give the same verdict on every repeat. On the
+second round it cleared that bar:
 
-```bash
-python3 scripts/notebooklm.py start /private/path/game-tape/run-01 --allow-upload
-python3 scripts/notebooklm.py wait /private/path/game-tape/run-01 --download
-```
+| Measure | Result |
+|---|---|
+| Labelled failures caught | 48/48 |
+| Faithful claims falsely flagged | 0/969 |
+| Accept/reject decisions correct | 54/54 |
+| Cases stable across three runs | 18/18 |
 
-Only the prepared narration file is uploaded. The notebook remains private unless you separately change
-its sharing. Full-episode transcription and [semantic QA](references/audio-qa.md) are required before
-calling the narration accurate. Opening checks miss later drift. `game_tape.py check-narration` runs a
-[claim-level check](references/narration-check.md) of the transcript against the evidence and review.
+The cases include two real Gemini Notebook episodes, both of which human review had rejected for
+embellishment. The checker rejected both in every run, for the reasons human review found.
 
-**NotebookLM is generative.** Format, relative length, language, focus and source selection are real controls;
-exact minutes, fixed voices, deterministic seeds and verbatim scripts are not supported promises. You can
-use just the local report, or feed the reviewed prose into another presentation tool.
+This is a small development set built from fictional sessions: two scenarios,
+Brief-length episodes, and no held-out set. Treat the result as directional. A rejection is actionable;
+an acceptance is strong evidence, not proof.
 
-## Privacy and limits
+Gemini Notebook itself still embellishes sometimes, for example by turning an eight-minute gap into "an
+8-minute rollback". That is why every episode is checked rather than trusted. Full method and
+round-by-round results: [checker evaluation](references/checker-eval.md),
+[validation record](references/validation.md).
 
-Collection and rendering make no network calls. The model running your coding agent still sees the evidence
-it reads under that host's normal data policy. `--allow-upload` sends the selected narration to your Google
-account. Review it for confidential information first. Recognizable-token redaction is **not** a guarantee
-that secrets or personal details have been removed.
+## Privacy
 
-Runtime files belong outside this public checkout; `runs/` and `private/` are also gitignored as a fallback.
-Never publish real session logs, generated private reviews, browser profiles, account ids, or credentials.
-This repository's examples and fixtures are synthetic. No schedule, account setup, cookie extraction,
-public notebook sharing, auto-remediation, or public posting is installed by the skill.
+- `prepare` and `render` make no network calls. `doctor` makes none of its own and counts transcript
+  files without reading them; `--probe-model` adds one tiny Claude call.
+- `check-narration` sends the transcript, evidence and review to Anthropic through your `claude` CLI
+  login, under that account's data policy.
+- Runs live under `~/.agent-game-tape`, outside the repository.
+- The coding agent reading your evidence sees it under that host's normal data policy.
+- `--allow-upload` sends only the selected sources and focus prompt to your own Google account. Read them
+  first. Secret redaction is best-effort, not a guarantee.
+- The skill installs no schedules, never shares notebooks publicly, and never reads browser cookies.
 
-Transcript formats evolve. See the adapter coverage report instead of treating an empty result as a quiet
-day. Python validates structure and exact spans, not semantic truth or causal responsibility. Human/model
-judgment and final-artifact inspection remain part of the workflow.
+## Limits
 
-## Development
+- Transcript formats change. Check the coverage report before reading an empty day as a quiet one.
+- Python validates structure and exact quotes, not semantic truth or who caused what. Read the report.
+- The checker reads a transcript, not sound. ASR errors can look like narration errors.
+- The audio client uses undocumented Google endpoints and may break when Google changes them.
 
-```bash
-python3 -m unittest discover -s tests -v
-python3 -m compileall -q scripts examples
-```
+## Models
 
-Tests are offline. The [evaluation protocol](references/evaluation-protocol.md) keeps behavioral comparisons
-separate from unit tests. Report actual outputs and limitations, not a universal “best prompt.”
+The narration checker runs through your local Claude Code login. The tested model is
+`claude-opus-5-5`, set in [`scripts/models.py`](scripts/models.py). `check-narration --model` accepts
+another model, but the receipt and output then mark the result `unvalidated`: the evaluation above
+covers the tested model only.
 
-MIT licensed. Not affiliated with Google, Anthropic, or OpenAI.
+## Contributing
+
+Issues and small pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) and the
+[changelog](CHANGELOG.md).
+
+## License
+
+[MIT](LICENSE). Not affiliated with Google, Anthropic or OpenAI.

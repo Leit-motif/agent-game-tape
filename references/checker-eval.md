@@ -1,5 +1,20 @@
 # Narration-checker evaluation — fixed before any checker run
 
+> **In short**
+>
+> - **Question:** does `check-narration` catch the errors a human reviewer found in narrated episodes,
+>   leave faithful claims alone, and give the same answer when run again?
+> - **Result:** yes, on this set. Round 2 passed the fixed bar: 48/48 labelled failures caught, 0/969 false
+>   flags on faithful claims, 54/54 decisions correct, all 18 cases stable across 3 runs, 0 errors.
+>   Round 1 missed the bar by one run. The cause was decision order: a coverage gap hid a rejection the
+>   checker had already found. That was fixed before round 2, and no case, label or bar changed.
+> - **Scope:** directional. The set is small and fictional (two scenarios, Brief length) and has no
+>   held-out cases. Treat a rejection as actionable and an acceptance as strong but not proof.
+> - **Integrity:** the protocol, cases and pass bar below were committed before the checker ran on any case.
+>   Results are appended under the line at the end.
+>
+> *Naming note:* NotebookLM was renamed Gemini Notebook. This record keeps the name used at the time.
+
 This protocol, the labelled cases and the round-1 checker (prompt, schema and code) are committed together
 before the checker is run on any case. Results are appended below the line, never edited into the rules.
 

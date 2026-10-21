@@ -16,6 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'examples')]
 import claim_check
+from models import TESTED_MODEL, model_status
 from game_tape import save
 from make_demo import cases as demo_cases
 
@@ -139,6 +140,7 @@ def evaluate(case_paths, out, backend_factory, runs=3, jobs=4, externals=None, m
             future.result()
     summary = summarize(cases, rows, runs)
     summary.update(started_at=started, finished_at=datetime.now(timezone.utc).isoformat(), model=model,
+                   model_status=model_status(model),
                    git=git_state(), case_files=[{'path': str(p), 'sha256': hashlib.sha256(Path(p).read_bytes()).hexdigest()} for p in case_paths],
                    externals={k: hashlib.sha256(Path(v).read_bytes()).hexdigest() for k, v in externals.items() if Path(v).exists()})
     save(out / 'summary.json', summary)
@@ -192,13 +194,16 @@ def main():
     p.add_argument('--runs', type=int, default=3)
     p.add_argument('--jobs', type=int, default=4)
     p.add_argument('--out', required=True)
-    p.add_argument('--model', default='claude-opus-5-5')
+    p.add_argument('--model', default=TESTED_MODEL)
     a = p.parse_args()
     if any('=' not in item for item in a.external):
         p.error('--external takes NAME=PATH')
     externals = dict(item.split('=', 1) for item in a.external)
     summary = evaluate(a.cases, a.out, lambda: claim_check.ClaudeCLIBackend(model=a.model), a.runs, a.jobs, externals, a.model)
     print(table(summary))
+    print(f"model {a.model} ({summary['model_status']})")
+    if summary['model_status'] == 'unvalidated':
+        print(f'warning: checker results were validated only with {TESTED_MODEL}; treat these results as unvalidated', file=sys.stderr)
     return 0 if summary['bar_pass'] else 1
 
 

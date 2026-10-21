@@ -8,3 +8,4 @@ private/
 *.mp3
 *.wav
 .DS_Store
+.agent-game-tape/

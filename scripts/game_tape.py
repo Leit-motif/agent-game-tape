@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Evidence-backed game tape: collect locally, validate a review, render narration, audit audio."""
+"""Agent Game Tape: review a day of your local agent sessions like game tape and get an evidence-backed
+coaching report.
+
+Steps: doctor (check setup), prepare (read local transcripts), render (validate your review, write the local
+report and the optional audio upload), then audit-audio and check-narration if you made audio. Collection and
+render are offline. check-narration sends the transcript, evidence and review to Anthropic through your Claude
+CLI login (claude -p). Audio upload happens only with notebooklm.py start --allow-upload."""
 from __future__ import annotations
 
 import argparse
@@ -14,6 +20,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from collect import collect
+from models import TESTED_MODEL, model_status
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -239,6 +246,46 @@ def build_focus(review, audio_format='deep_dive'):
     return template.replace('{{closing}}', closing)
 
 
+UPLOAD_SCHEMA = 'agent-game-tape/upload-v2'
+
+
+def source_name(index, path):
+    name = re.sub(r'[^A-Za-z0-9._-]+', '_', Path(path).name).lstrip('._') or 'source'
+    return f'{index:02d}-{name}'
+
+
+def private_digests(folder, bundle):
+    protected = {folder / name for name in ('evidence.json', 'evidence.md', 'review.json')}
+    if bundle.get('rule_source'):
+        protected.add(Path(bundle['rule_source']).expanduser().resolve())
+    digests = {hashlib.sha256(path.read_bytes()).hexdigest() for path in protected if path.is_file()}
+    # Best effort for rules copies: common JSON spellings of the rules object, not every possible reformatting.
+    for text in (json.dumps(bundle.get('rules')), json.dumps(bundle.get('rules'), indent=2, ensure_ascii=False)):
+        digests |= {hashlib.sha256(t.encode()).hexdigest() for t in (text, text + '\n')}
+    return protected, digests
+
+
+def read_shareable(folder, private, entry, label):
+    """Bytes of a caller file that may leave the machine; refuse private run files, links, folders and empty files."""
+    protected, digests = private
+    original = Path(entry).expanduser()
+    if original.is_symlink():
+        raise ValueError(f'{label} {entry} is a symlink; pass the real file')
+    path = original.resolve()
+    if not path.is_file():
+        raise ValueError(f'{label} {entry} is not a regular file')
+    if path in protected:
+        raise ValueError(f'{label} {entry} is the run\'s raw evidence, review or rules; it never leaves this machine')
+    if path.is_relative_to(folder) and not path.is_relative_to(folder / 'upload'):
+        raise ValueError(f'{label} {entry} is inside the run folder; only files under upload/ may be sent')
+    data = path.read_bytes()
+    if not data.strip():
+        raise ValueError(f'{label} {entry} is empty')
+    if hashlib.sha256(data).hexdigest() in digests:
+        raise ValueError(f'{label} {entry} is a copy of the run\'s raw evidence, review or rules')
+    return path.name, data
+
+
 def render(args):
     with run_lock(args.run):
         return _render(args)
@@ -259,15 +306,50 @@ def _render(args):
     text = narration(bundle, review, args.style)
     if len(text.split()) > args.max_words:
         raise ValueError(f"narration has {len(text.split())} words; maximum {args.max_words}. Select less, do not truncate facts.")
-    source = folder / 'upload' / 'game-tape.md'
     if (folder / 'notebooklm-state.json').exists():
-        raise ValueError('run already has NotebookLM state; use a new run folder to change sources')
-    write(source, text)
-    focus = build_focus(review, args.format)
+        raise ValueError('run already has Gemini Notebook state; use a new run folder to change sources')
+    if getattr(args, 'focus', None) is not None and getattr(args, 'focus_file', None):
+        raise ValueError('give --focus or --focus-file, not both')
+    private = private_digests(folder, bundle)
+    if getattr(args, 'focus_file', None):
+        focus, origin = read_shareable(folder, private, args.focus_file, 'focus file')[1].decode('utf-8').strip(), 'caller'
+    elif getattr(args, 'focus', None) is not None:
+        focus, origin = args.focus.strip(), 'caller'
+    else:
+        focus, origin = build_focus(review, args.format), 'bundled'
+    if not focus:
+        raise ValueError('focus prompt is empty')
+    if any(hashlib.sha256(t.encode()).hexdigest() in private[1] for t in (focus, focus + '\n')):
+        raise ValueError('focus is a copy of the run\'s raw evidence, review or rules')
+    sources, copies, seen = [], [], set()
+    for index, entry in enumerate(getattr(args, 'source', None) or ['narration'], 1):
+        if entry == 'narration':
+            relative, data = 'upload/game-tape.md', text.encode()
+        else:
+            name, data = read_shareable(folder, private, entry, 'source')
+            relative = f'upload/sources/{source_name(index, name)}'
+            copies.append((folder / relative, data))
+        digest = hashlib.sha256(data).hexdigest()
+        if digest in seen:
+            raise ValueError(f'duplicate source content ({relative}); pass each source once')
+        seen.add(digest)
+        sources.append({'path': relative, 'sha256': digest})
+    extra = folder / 'upload' / 'sources'
+    if extra.is_symlink() or (extra.exists() and not extra.is_dir()):
+        raise ValueError('upload/sources must be a real folder')
+    # Everything is validated; only now replace the previous upload.
+    write(folder / 'upload' / 'game-tape.md', text)
     write(folder / 'upload' / 'focus.txt', focus + '\n')
-    manifest = {'schema': 'agent-game-tape/upload-v1', 'title': f"Game tape {bundle['window'][0][:10]}",
-                'source': 'upload/game-tape.md', 'source_sha256': hashlib.sha256(text.encode()).hexdigest(),
+    if extra.exists():
+        for old in extra.iterdir():
+            old.unlink()
+    for path, data in copies:
+        path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        path.write_bytes(data)
+        path.chmod(0o600)
+    manifest = {'schema': UPLOAD_SCHEMA, 'title': f"Game tape {bundle['window'][0][:10]}", 'sources': sources,
                 'focus': 'upload/focus.txt', 'focus_sha256': hashlib.sha256((focus + '\n').encode()).hexdigest(),
+                'focus_origin': origin, 'web_research': 'off',
                 'evidence_sha256': fingerprint(bundle), 'review_sha256': fingerprint(review), 'style': args.style,
                 'format': args.format, 'length': args.length, 'language': args.language,
                 'semantic_review': 'required', 'audio_quality': 'unverified'}
@@ -276,7 +358,9 @@ def _render(args):
     for i, moment in enumerate(review['moments'], 1):
         report += f"- Moment {i}: {moment['human_event']} → " + ', '.join(ref['event'] for ref in moment['evidence']) + f"; {moment['rule_id']}; {moment['assurance']}\n"
     write(folder / 'report.md', report)
-    print(json.dumps({'ok': True, 'manifest': str(folder / 'manifest.json'), 'words': len(text.split()), 'next': 'Semantically review evidence support, source privacy, and narration before upload.'}))
+    print(json.dumps({'ok': True, 'manifest': str(folder / 'manifest.json'), 'words': len(text.split()),
+                      'sources': [s['path'] for s in sources], 'focus_origin': origin,
+                      'next': 'Semantically review evidence support, source privacy, and narration before upload.'}))
     return 0
 
 
@@ -330,49 +414,68 @@ def check_narration(args):
     counts = {}
     for claim in receipt['claims']:
         counts[claim['label']] = counts.get(claim['label'], 0) + 1
+    status = model_status(args.model)
     print(json.dumps({'decision': receipt['decision'], 'reasons': receipt['reasons'], 'labels': counts,
-                      'opening_ok': (receipt['opening'] or {}).get('ok'), 'out': str(Path(args.out).resolve())}, indent=2))
+                      'opening_ok': (receipt['opening'] or {}).get('ok'), 'model': args.model, 'model_status': status,
+                      'out': str(Path(args.out).resolve())}, indent=2))
+    if status == 'unvalidated':
+        print(f'warning: checker results were validated only with {TESTED_MODEL}; treat this receipt as unvalidated', file=sys.stderr)
     return 0 if receipt['decision'] == 'accepted' else 1
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    sub = parser.add_subparsers(dest='command', required=True)
-    p = sub.add_parser('prepare', help='read selected local transcripts; no network')
-    p.add_argument('--day', default='yesterday')
-    p.add_argument('--timezone', default='UTC')
-    p.add_argument('--day-start-hour', type=int, choices=range(24), default=0)
-    p.add_argument('--claude', action='append', help='Claude projects folder or JSONL; repeatable. Explicit roots disable auto-discovery.')
-    p.add_argument('--codex', action='append', help='Codex sessions folder or JSONL; repeatable')
-    p.add_argument('--openclaw', action='append', default=[], help='explicit exported JSONL folder/file; no live-store assumption')
-    p.add_argument('--rules', default=str(ROOT / 'references' / 'rules.json'))
-    p.add_argument('--lookback-hours', type=int, choices=range(0, 169), default=24, help='prior context, never eligible as a new moment')
-    p.add_argument('--scan-limits', help='optional JSON file of positive max_* collector limits; effective budgets are retained in coverage')
-    p.add_argument('--previous-review', help='optional prior review.json to check whether its experiment was actually tried')
-    p.add_argument('--out', required=True)
+def add_doctor(sub):
+    import doctor  # owned by scripts/doctor.py; imported here so the other commands never depend on it
+    p = sub.add_parser('doctor', help='check this machine is ready: Python, claude CLI, transcripts, optional nlm. Read-only.',
+                       description='Check setup before the first review. Read-only. Makes no network call unless you ask it to probe the model.')
+    doctor.add_arguments(p)
+    p.set_defaults(fn=doctor.run)
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = parser.add_subparsers(dest='command', required=True, metavar='COMMAND')
+    add_doctor(sub)
+    p = sub.add_parser('prepare', help='read selected local transcripts for one day into a private run folder; no network')
+    p.add_argument('--day', default='yesterday', help='YYYY-MM-DD or yesterday (default)')
+    p.add_argument('--timezone', default='UTC', help='IANA zone for the day boundaries, e.g. America/Chicago')
+    p.add_argument('--day-start-hour', type=int, choices=range(24), default=0, metavar='HOUR', help='hour the day starts (0-23)')
+    p.add_argument('--claude', action='append', help='Claude Code projects folder or JSONL file; repeatable. Giving any folder turns off auto-discovery.')
+    p.add_argument('--codex', action='append', help='Codex sessions folder or JSONL file; repeatable')
+    p.add_argument('--openclaw', action='append', default=[], help='exported OpenClaw JSONL folder or file; repeatable')
+    p.add_argument('--rules', default=str(ROOT / 'references' / 'rules.json'), help='JSON object of your working rules (default: bundled rules.json)')
+    p.add_argument('--lookback-hours', type=int, choices=range(0, 169), default=24, metavar='HOURS', help='earlier context to include (0-168); never picked as a new moment')
+    p.add_argument('--scan-limits', help='optional JSON file of collector limits; the limits used are recorded in coverage')
+    p.add_argument('--previous-review', help='earlier review.json, to check whether its experiment was tried')
+    p.add_argument('--out', required=True, help='new run folder to create')
     p.set_defaults(fn=prepare)
-    p = sub.add_parser('render', help='validate structured review and prepare one narration source')
-    p.add_argument('run')
-    p.add_argument('--style', choices=['prose', 'fielded'], default='prose', help='fielded is the legacy comparison arm')
-    p.add_argument('--max-words', type=int, default=1600)
-    p.add_argument('--format', choices=['deep_dive', 'brief', 'critique', 'debate'], default='deep_dive')
-    p.add_argument('--length', choices=['short', 'default', 'long'], default='default')
-    p.add_argument('--language', default='en')
+    p = sub.add_parser('render', help='validate review.json and build the narration, focus prompt and upload manifest',
+                       description='Validate review.json and build the upload. These controls mirror the Customize Audio Overview dialog. '
+                                   'Web research is always off: outside facts carry no evidence ids, so the narration could no longer be checked against your sessions.')
+    p.add_argument('run', help='run folder made by prepare, containing review.json')
+    p.add_argument('--style', choices=['prose', 'fielded'], default='prose', help='narration layout; fielded is a field-labelled layout kept for comparison')
+    p.add_argument('--max-words', type=int, default=1600, help='refuse narration longer than this (default 1600)')
+    p.add_argument('--format', choices=['deep_dive', 'brief', 'critique', 'debate'], default='deep_dive', help='audio format (default deep_dive); brief allows at most two moments')
+    p.add_argument('--length', choices=['short', 'default', 'long'], default='default', help='audio length (default: default)')
+    p.add_argument('--language', default='en', help='language code, e.g. en, es, ja (default en)')
+    p.add_argument('--source', action='append', metavar='PATH', help='file to upload; repeatable. The word narration means the rendered upload/game-tape.md (default: narration only)')
+    focus = p.add_mutually_exclusive_group()
+    focus.add_argument('--focus', metavar='TEXT', help='your own focus prompt (default: bundled template)')
+    focus.add_argument('--focus-file', metavar='PATH', help='read the focus prompt from a file')
     p.set_defaults(fn=render)
-    p = sub.add_parser('audit-audio', help='triage a complete local ASR transcript, never auto-accept')
-    p.add_argument('--transcript', required=True)
-    p.add_argument('--duration', type=float, required=True, help='actual duration from ffprobe, seconds')
-    p.add_argument('--out', required=True)
+    p = sub.add_parser('audit-audio', help='scan a full local transcript of the audio for known problems; never accepts audio on its own')
+    p.add_argument('--transcript', required=True, help='whisper JSON or plain-text transcript')
+    p.add_argument('--duration', type=float, required=True, help='actual audio duration in seconds, from ffprobe')
+    p.add_argument('--out', required=True, help='where to write the audit JSON')
     p.set_defaults(fn=audit_audio)
-    p = sub.add_parser('check-narration', help='claim-level check of an ASR transcript against evidence and review; never listens')
+    p = sub.add_parser('check-narration', help='check each claim in the audio transcript against your evidence and review')
     p.add_argument('--run', help='run folder with evidence.json and review.json')
-    p.add_argument('--evidence')
-    p.add_argument('--review')
+    p.add_argument('--evidence', help='evidence.json (instead of --run)')
+    p.add_argument('--review', help='review.json (instead of --run)')
     p.add_argument('--transcript', required=True, help='whisper JSON with segments')
-    p.add_argument('--out', required=True)
-    p.add_argument('--model', default='claude-opus-5-5')
+    p.add_argument('--out', required=True, help='where to write the receipt JSON')
+    p.add_argument('--model', default=TESTED_MODEL, help=f'checker model (default: the tested model, {TESTED_MODEL})')
     p.set_defaults(fn=check_narration)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     try:
         return args.fn(args) or 0
     except (ValueError, OSError, KeyError, TypeError) as exc:

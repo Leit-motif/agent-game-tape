@@ -12,6 +12,7 @@ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'examples')]
 import claim_check as cc
 import game_tape as tape
 import narration_eval as ev
+from models import TESTED_MODEL
 from make_demo import cases
 
 SEGMENTS = [
@@ -172,7 +173,7 @@ class Backend(unittest.TestCase):
                 patch('claim_check.subprocess.run', fake_run):
             backend = cc.ClaudeCLIBackend()
             self.assertEqual(backend.complete('PROMPT', {'type': 'object'}), {'ok': 1})
-        self.assertEqual(seen['argv'], ['claude', '-p', '--safe-mode', '--model', 'claude-opus-5-5', '--system-prompt', cc.SYSTEM,
+        self.assertEqual(seen['argv'], ['claude', '-p', '--safe-mode', '--model', TESTED_MODEL, '--system-prompt', cc.SYSTEM,
                                         '--output-format', 'json', '--no-session-persistence', '--tools', '',
                                         '--strict-mcp-config', '--setting-sources', '', '--json-schema', '{"type": "object"}'])
         self.assertEqual(seen['input'], 'PROMPT')
@@ -188,6 +189,18 @@ class Backend(unittest.TestCase):
         with patch('claim_check.subprocess.run', side_effect=OSError('no claude')), self.assertRaises(OSError):
             backend.complete('PROMPT', {})
         self.assertIsNone(backend.last_raw)
+
+    def test_model_status_in_receipt(self):
+        self.assertEqual(cc.ClaudeCLIBackend().model, TESTED_MODEL)
+        _, bundle, review = next(cases())
+        with tempfile.TemporaryDirectory() as folder:
+            transcript = Path(folder) / 't.json'
+            transcript.write_text(json.dumps({'segments': SEGMENTS}))
+            for model, status in [(TESTED_MODEL, 'tested'), ('other-model', 'unvalidated')]:
+                backend = cc.FakeBackend({'bad': 1})
+                backend.model = model
+                receipt = cc.check(transcript, bundle, review, backend)
+                self.assertEqual(receipt['backend'], {'name': 'fake', 'model': model, 'model_status': status})
 
     def test_cli_error_result(self):
         done = type('Done', (), {'returncode': 0, 'stderr': '', 'stdout': json.dumps({'is_error': True})})()
@@ -234,6 +247,7 @@ class Evaluation(unittest.TestCase):
         flagged = reply(labels={'s4': ('strengthened', 'interval_as_labor')})
         summary, rows = self.evaluate([flagged] * 3)
         self.assertTrue(summary['bar_pass'])
+        self.assertEqual((summary['model'], summary['model_status']), (None, 'unvalidated'))
         self.assertEqual(rows[0]['failures'][0], {'id': 'F1', 'sentences': ['s4'], 'caught': True,
                                                    'labels': ['strengthened:interval_as_labor'], 'type_match': True})
         self.assertEqual(summary['aggregate']['failures_caught'], 3)

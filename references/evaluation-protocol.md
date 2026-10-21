@@ -1,5 +1,14 @@
 # Behavioral release gate
 
+This is the test a change to the narration or audio step must pass before it ships. Passing unit tests
+shows the code works; it does not show that Gemini Notebook (formerly NotebookLM) narrated an episode
+accurately. This protocol checks the audio itself: fixed fictional cases, facts written down before any
+generation, zero-tolerance gates for invented facts, and a small scored comparison. The first trial run
+under it failed; the results are in [validation.md](validation.md).
+
+*Naming note:* NotebookLM was renamed Gemini Notebook. The protocol text below is kept as written, so it
+uses the earlier name.
+
 This protocol is fixed before generating revised candidate episodes. Historical observations diagnose
 failures; they are not a controlled A/B and cannot establish causation.
 

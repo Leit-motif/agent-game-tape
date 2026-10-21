@@ -14,6 +14,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from game_tape import fingerprint
+from models import TESTED_MODEL, model_status
 
 TAXONOMY = {
     'report_as_fact': 'assistant report → established fact',
@@ -214,7 +215,7 @@ Respond only with the JSON object required by the schema: one sentences entry fo
 class ClaudeCLIBackend:
     name = 'claude-cli'
 
-    def __init__(self, model='claude-opus-5-5', timeout=600):
+    def __init__(self, model=TESTED_MODEL, timeout=600):
         self.model, self.timeout, self.last_raw = model, timeout, None
 
     def argv(self, schema):
@@ -346,7 +347,8 @@ def check(transcript_path, bundle, review, backend):
     receipt = {'schema': 'agent-game-tape/narration-check-v1', 'decision': 'unverified', 'reasons': [],
                'hashes': {'transcript_sha256': transcript_sha, 'evidence_sha256': fingerprint(bundle),
                           'review_sha256': fingerprint(review), 'prompt_sha256': sha256(prompt), 'response_sha256': None},
-               'backend': {'name': getattr(backend, 'name', None), 'model': getattr(backend, 'model', None)},
+               'backend': {'name': getattr(backend, 'name', None), 'model': getattr(backend, 'model', None),
+                           'model_status': model_status(getattr(backend, 'model', None))},
                'sentences': sents, 'claims': [], 'roles': {}, 'opening': None, 'limits': LIMITS}
     try:
         response = backend.complete(prompt, SCHEMA)

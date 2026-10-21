@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Optional nlm adapter. Explicit upload, resumable remote ids, no automatic editorial acceptance."""
+"""Send a rendered run to Gemini Notebook (formerly NotebookLM) through the nlm CLI and track the audio.
+
+Uploads only what manifest.json lists, and only with --allow-upload. Remote ids are recorded so a run can
+resume without duplicating work. Generated audio is never accepted automatically."""
 from __future__ import annotations
 
 import argparse
@@ -54,18 +57,30 @@ class Publisher:
             raise ValueError('nlm not found; install notebooklm-mcp-cli separately or pass --nlm /absolute/path')
         self.client_python = client_python or python_for_cli(self.executable)
         self.environment_entrypoint = environment_entrypoint
-        self.payloads = {}
-        for field, expected in [('source', 'upload/game-tape.md'), ('focus', 'upload/focus.txt')]:
-            if self.manifest.get(field) != expected:
+        self.payloads, self.sources = {}, []
+        if self.manifest.get('schema') == 'agent-game-tape/upload-v1':
+            if self.manifest.get('source') != 'upload/game-tape.md':
                 raise ValueError('only the fixed narration and focus allowlist can be uploaded')
-            original = self.folder / expected
-            path = original.resolve()
-            if not path.is_relative_to(self.folder) or original.is_symlink() or original.parent.is_symlink():
-                raise ValueError('upload paths must stay inside the run')
-            self.payloads[field] = path.read_bytes()
-            digest = hashlib.sha256(self.payloads[field]).hexdigest()
-            if digest != self.manifest.get(field + '_sha256'):
-                raise ValueError(f'{field} changed after rendering; use a new run')
+            listed = [{'path': self.manifest['source'], 'sha256': self.manifest.get('source_sha256')}]
+        elif self.manifest.get('schema') == 'agent-game-tape/upload-v2':
+            listed = self.manifest.get('sources')
+            if not isinstance(listed, list) or not listed or any(not isinstance(x, dict) or not isinstance(x.get('path'), str) for x in listed):
+                raise ValueError('manifest sources must be a nonempty list of {path, sha256}')
+        else:
+            raise ValueError('unknown manifest schema; render again with this version')
+        if self.manifest.get('focus') != 'upload/focus.txt':
+            raise ValueError('only the fixed narration and focus allowlist can be uploaded')
+        for item in listed:
+            data = self.read_upload(item['path'])
+            if hashlib.sha256(data).hexdigest() != item.get('sha256'):
+                raise ValueError(f"source changed after rendering ({item['path']}); use a new run")
+            self.sources.append({'path': item['path'], 'sha256': item['sha256'], 'data': data})
+        if len({s['sha256'] for s in self.sources}) != len(self.sources):
+            raise ValueError('manifest lists the same source twice')
+        self.payloads['source'] = self.sources[0]['data']
+        self.payloads['focus'] = self.read_upload('upload/focus.txt')
+        if hashlib.sha256(self.payloads['focus']).hexdigest() != self.manifest.get('focus_sha256'):
+            raise ValueError('focus changed after rendering; use a new run')
         for filename, key in [('evidence.json', 'evidence_sha256'), ('review.json', 'review_sha256')]:
             if fingerprint(load(self.folder / filename)) != self.manifest[key]:
                 raise ValueError(f'{filename} changed after rendering')
@@ -75,6 +90,24 @@ class Publisher:
         self.digest = fingerprint(self.manifest)
         if self.state and self.state.get('manifest_sha256') != self.digest:
             raise ValueError('state belongs to different content; use a new run')
+
+    def read_upload(self, relative):
+        original = self.folder / relative
+        upload = self.folder / 'upload'
+        if Path(relative).is_absolute() or not original.resolve().is_relative_to(upload) or upload.is_symlink():
+            raise ValueError('upload paths must stay inside the run upload folder')
+        for part in [original, *original.parents]:
+            if part == self.folder:
+                break
+            if part.is_symlink():
+                raise ValueError('upload paths must stay inside the run upload folder')
+        return original.resolve().read_bytes()
+
+    def source_ids(self):
+        ids = dict(self.state.get('source_ids') or {})
+        if self.state.get('source_id') and not ids:  # state written before multi-source support
+            ids[self.sources[0]['sha256']] = self.state['source_id']
+        return ids
 
     def update(self, **fields):
         self.state.update(fields)
@@ -126,30 +159,36 @@ class Publisher:
                 raise ValueError('notebook response had no valid string id; reconcile remote result')
             self.update(notebook_id=nb, notebook_url=f'https://notebooklm.google.com/notebook/{nb}', pending_mutation=None)
         nb = self.state['notebook_id']
-        if not self.state.get('source_id'):
+        for source in self.sources:
+            if source['sha256'] in self.source_ids():
+                continue
             # CLI --file reads later. Seal the verified bytes, not the mutable renderer path.
-            sealed = self.folder / 'sealed' / self.manifest['source_sha256'] / 'game-tape.md'
+            sealed = self.folder / 'sealed' / source['sha256'] / Path(source['path']).name
             sealed.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
             if not sealed.resolve().is_relative_to(self.folder) or sealed.is_symlink() or sealed.parent.is_symlink():
                 raise ValueError('sealed source must stay inside the run')
             try:
                 with sealed.open('xb') as handle:
-                    handle.write(self.payloads['source'])
+                    handle.write(source['data'])
                 sealed.chmod(0o400)
             except FileExistsError:
-                if sealed.read_bytes() != self.payloads['source']:
+                if sealed.read_bytes() != source['data']:
                     raise ValueError('sealed source differs from verified bytes')
+            self.update(pending_source_sha256=source['sha256'])
             made = self.mutation('source_add', ['source', 'add', nb, '--file', str(sealed), '--wait', '--json'])
-            source = made.get('source_id') or made.get('id') if isinstance(made, dict) else None
-            if not isinstance(source, str) or not source.strip():
+            added = made.get('source_id') or made.get('id') if isinstance(made, dict) else None
+            if not isinstance(added, str) or not added.strip():
                 raise ValueError('source response had no valid string id; reconcile remote result')
-            self.update(source_id=source, pending_mutation=None)
+            ids = self.source_ids()
+            ids[source['sha256']] = added
+            self.update(source_ids=ids, source_id=ids[self.sources[0]['sha256']], pending_source_sha256=None, pending_mutation=None)
         # Never adopt an unrelated artifact merely because it is audio. A reused notebook must be clean.
         artifacts = rows(self.call(['studio', 'status', nb, '--json']), 'artifacts')
         if any(str(a.get('type', '')).lower() == 'audio' for a in artifacts):
             raise ValueError('notebook already contains untracked audio; reconcile instead of adopting or duplicating it')
         focus = self.payloads['focus'].decode('utf-8').strip()
-        request = {'notebook_id': nb, 'source_ids': [self.state['source_id']], 'format': self.manifest['format'],
+        ids = self.source_ids()
+        request = {'notebook_id': nb, 'source_ids': [ids[s['sha256']] for s in self.sources], 'format': self.manifest['format'],
                    'length': self.manifest['length'], 'language': self.manifest['language'], 'focus_prompt': focus, 'profile': None}
         request_path = self.folder / 'kickoff-request.json'
         save(request_path, request)
@@ -174,7 +213,8 @@ class Publisher:
         recorded_focus = artifact.get('custom_instructions')
         focus_match = ' '.join(recorded_focus.split()) == ' '.join(submitted_focus.split()) if isinstance(recorded_focus, str) else None
         recorded_sources = artifact.get('source_ids')
-        sources_match = set(recorded_sources) == {self.state.get('source_id')} if isinstance(recorded_sources, list) and all(isinstance(x, str) for x in recorded_sources) else None
+        expected = set(self.source_ids().values())
+        sources_match = set(recorded_sources) == expected if isinstance(recorded_sources, list) and all(isinstance(x, str) for x in recorded_sources) else None
         self.update(generation_state=normalized, remote_status=state, audio_quality='unverified',
                     focus_recorded_match=focus_match, source_selection_recorded_match=sources_match)
         if normalized == 'generated' and download:
@@ -187,17 +227,17 @@ class Publisher:
         return self.state
 
 
-def main():
-    p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('action', choices=['start', 'status', 'wait'])
-    p.add_argument('run')
+def main(argv=None):
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument('action', choices=['start', 'status', 'wait'], help='start: upload and request audio; status: check once; wait: poll until done')
+    p.add_argument('run', help='rendered run folder containing manifest.json')
     p.add_argument('--nlm', help='absolute path to an nlm-compatible executable, not a shell command')
     p.add_argument('--client-python', help='Python executable in the pinned notebooklm-mcp-cli environment; auto-detected when possible')
-    p.add_argument('--environment-entrypoint', help='optional existing guarded Python CLI wrapper to load host TLS/environment setup without running its main')
-    p.add_argument('--allow-upload', action='store_true')
-    p.add_argument('--download', action='store_true')
-    p.add_argument('--max-minutes', type=float, default=25)
-    a = p.parse_args()
+    p.add_argument('--environment-entrypoint', help=argparse.SUPPRESS)  # advanced; see references/notebooklm.md
+    p.add_argument('--allow-upload', action='store_true', help='required for start; confirms you reviewed what will be sent')
+    p.add_argument('--download', action='store_true', help='download audio.m4a once generated')
+    p.add_argument('--max-minutes', type=float, default=25, help='how long wait polls (default 25)')
+    a = p.parse_args(argv)
     try:
         with lock(a.run):
             pub = Publisher(a.run, a.nlm, a.client_python, a.environment_entrypoint)

@@ -1,7 +1,11 @@
 # Hosts and transcript adapters
 
-The skill format is one `SKILL.md` plus relative resources. No OpenClaw tool names or private filesystem
-layout are required for the core workflow.
+This page covers where to install the skill for each coding agent, and how the collector reads your
+Claude Code, Codex and OpenClaw session files. Collection runs locally: it reads the default session folders or the ones you
+name, and nothing remote.
+
+The skill is one `SKILL.md` plus the files beside it. The core workflow needs no OpenClaw tool names and
+no particular private folder layout.
 
 ## Hosts
 
