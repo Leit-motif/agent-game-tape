@@ -73,19 +73,14 @@ Then ask Codex: `$agent-game-tape review yesterday's sessions`. For project-scop
 ## How it works
 
 ```mermaid
-flowchart TD
-    A["Local transcripts<br/>(Claude Code, Codex)"] --> B["prepare<br/>collect, no network"]
-    B --> C["evidence.json / evidence.md"]
-    C --> D["Agent review<br/>review.json with exact quotes"]
-    D --> E["render<br/>validate quotes and spans"]
-    E --> F["Local report<br/>report.md"]
-    E -. optional .-> G["Narration source<br/>upload/game-tape.md"]
-    G --> H["Gemini Notebook<br/>audio overview"]
-    H --> I["Download audio<br/>transcribe locally"]
-    I --> J["check-narration<br/>claim by claim"]
-    J --> K{"Decision"}
-    K --> L["accepted"]
-    K --> M["rejected / unverified"]
+flowchart LR
+    A["Local transcripts<br/>Claude Code, Codex"] --> B["prepare<br/>collect, no network"]
+    B --> C["Agent review<br/>exact quotes"]
+    C --> D["render<br/>validate"]
+    D --> E["Local report"]
+    D -. optional .-> F["Gemini Notebook<br/>audio episode"]
+    F --> G["check-narration<br/>claim by claim"]
+    G --> H{"accepted or<br/>rejected"}
 ```
 
 The agent you already use does the reading and judgment. The Python helpers do the deterministic parts:
