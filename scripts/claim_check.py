@@ -362,12 +362,18 @@ def check(transcript_path, bundle, review, backend):
     except TypeError as exc:  # unhashable ids and similar shapes the schema should have excluded
         problems, roles, rows = [f'malformed field: {exc}'], {}, []
     receipt.update(claims=rows, roles=roles, opening=_opening(sents, roles))
-    if problems:
-        receipt['reasons'] = ['invalid backend output: ' + p for p in problems]
-        return receipt
     reasons = [f"{c['id']} {c['label']} ({', '.join(c['sentences'])}): {c['text']}" for c in rows if flagged(c['label'])]
     opening = receipt['opening']
     if not opening['ok']:
         reasons.append(f"opening: first substantive sentence {opening['first_substantive_sentence']} has role {opening['role']}, not moment:1")
+    if problems:
+        invalid = ['invalid backend output: ' + p for p in problems]
+        # Uncovered sentences cannot excuse an already established failure: reject, never accept.
+        coverage_only = all(p.endswith(': not covered by any claim') for p in problems)
+        if coverage_only and reasons:
+            receipt.update(decision='rejected', reasons=reasons + invalid)
+        else:
+            receipt['reasons'] = invalid
+        return receipt
     receipt.update(decision='rejected' if reasons else 'accepted', reasons=reasons)
     return receipt

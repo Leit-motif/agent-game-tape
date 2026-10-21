@@ -93,3 +93,24 @@ No sound is reviewed. Unit tests use a fake backend and say nothing about model 
 ## Results
 
 Appended after each round.
+
+### Round 1 — checker at `a35d01e`: failed the bar by one run
+
+| Measure | Result |
+|---|---|
+| Labelled failures caught | 47/48 (16/16, 15/16, 16/16 per run) |
+| False flags on labelled-supported items | 0/969 |
+| Strength-change type matched | 36/36 |
+| Decisions correct | 53/54; 17 of 18 cases stable |
+| Errors | 0 |
+
+Both real Brief transcripts were rejected in all three runs: Case A 9/9 failures caught, Case B 3/3, no false
+flags. All four faithful-paraphrase cases were accepted in all runs. The single miss: `b-opening-preamble`
+run 2 returned `unverified` instead of `rejected`. Its roles were valid and the opening check correctly
+found the preamble (s2, s3), but the model left methodology sentence s2 without a claim, so coverage
+validation marked the whole output invalid before the opening rejection could apply. **Bucket: invalid
+backend output** (decision precedence), not a semantic miss.
+
+Round-2 change: coverage gaps alone no longer hide an established rejection. When the only validation problems
+are uncovered sentences and the roles are valid, a failed opening or a flagged claim still rejects, and the
+gaps are listed. A coverage gap can never lead to acceptance; with no established failure it stays `unverified`.

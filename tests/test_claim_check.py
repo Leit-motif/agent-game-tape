@@ -138,6 +138,16 @@ class Decisions(Base):
                 self.assertIn(reason, ' '.join(receipt['reasons']))
         self.assertEqual(len(self.run_check(bad)['claims']), 4)  # recorded as returned
 
+    def test_coverage_gap_cannot_hide_established_failure(self):
+        flagged_gap = reply(labels={'s5': ('unsupported', None)})
+        del flagged_gap['claims'][2]  # s4 uncovered, but s5 is an established failure
+        receipt = self.run_check(flagged_gap)
+        self.assertEqual(receipt['decision'], 'rejected')
+        self.assertIn('s4: not covered', ' '.join(receipt['reasons']))
+        bad_ids = reply(labels={'s5': ('unsupported', None)})
+        bad_ids['claims'][0]['evidence'] = ['a-99']  # non-coverage problem keeps the output unverified
+        self.assertEqual(self.run_check(bad_ids)['decision'], 'unverified')
+
     def test_backend_exception(self):
         def boom(prompt, schema):
             raise RuntimeError('quota')
