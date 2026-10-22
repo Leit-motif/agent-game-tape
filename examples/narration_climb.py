@@ -203,7 +203,7 @@ def summarize(run, receipt_path, out, previous=None):
     review = load(run / 'review.json')
     failures = []
     for claim in receipt['claims']:
-        if claim['label'].startswith('strengthened'):
+        if (claim['label'] or '').startswith('strengthened'):
             failures.append(claim['label'])
         elif claim['label'] == 'unsupported':
             failures.append('unsupported')

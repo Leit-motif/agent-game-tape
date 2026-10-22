@@ -211,12 +211,13 @@ as the bundled Brief default (item 7), and the per-episode gate in `SKILL.md`.
 
 **Over the whole study (20 kickoffs).** 14 produced audio and were scored. All 6 that did not produce audio were
 ambiguous single-send kickoffs (exit 2). Each was reconciled read-only to exactly one matching artifact, which stayed
-`in_progress` for about two hours and then ended `failed`. None was resent.
+`in_progress` and was next observed `failed` 2.2 to 2.7 hours after kickoff. None was resent; whether Google or the
+local single-send path causes the ambiguity is unknown. Every clean kickoff produced audio.
 
 | Lineage | Scored | Accepted | Opening ok | Episodes with a factual flag |
 |---|---:|---:|---:|---:|
 | Old Brief focus (v0, v1) | 8 | 0 | 0 | 6 |
-| First-sentence opening (v2, shipped default) | 5 | 2 | 5 | 3 |
+| First-sentence opening (v2, shipped default) | 5 | 2 (0 as pre-registered) | 5 | 3 |
 | First-sentence + no-durations sentence (r2) | 1 | 0 | 1 | 1 |
 
 The opening fix is the one clearly helpful change (0 of 8 openings to 6 of 6). The factual flags that remain are
@@ -224,3 +225,11 @@ led by one family: a time saving, prevented damage or an interval voiced as a me
 episodes; the other 4 strengthened a different claim, such as a proposal voiced as a result). One prompt sentence
 aimed at that family did not stop it in its one scored episode. With the shipped defaults, read the accepted rate as about 2 in 5 with Brief on these fictional cases. That is an anecdote-sized
 estimate, not a rate to promise. The gate, not the renderer, makes delivered audio trustworthy.
+
+**Notes on the record.** v2's two accepts exist only under the title-line checker fix, made after v2 was scored;
+under the checker as pre-registered v2 was 0 of 5. v2 did not meet the pre-registered winner bar (+3 of 6); its
+opening fix ships by amendment item 7, which records the owner's direction. The v2 replay in "Checker fix and v2
+rescore" ran in memory, and `*.rescore.json` was written only for the two decisions it changed. After an
+independent review of this branch, the title-line test was narrowed to a whole-sentence match ("Welcome back, you
+protected the real data." is no longer excused). Replaying all 14 recorded receipts in memory with the narrowed
+test gives the same decisions as before.

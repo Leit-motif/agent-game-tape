@@ -11,9 +11,10 @@
   trials and both fictional Brief episodes. Full-episode review caught every one of them.
 - **What the narration climb found (2026-10-21/22):** naming the literal first sentence in the Brief focus fixed
   the opening (0 of 8 episodes before, 6 of 6 after); it is now the default. With it, 2 of 5 scored Brief episodes
-  passed `check-narration`. Prompt and source changes aimed at the remaining invented durations and savings
-  showed no gain. 6 of 20 requests ended in a Google-side `failed` artifact with no audio. See the
-  [narration climb](narration-climb.md).
+  passed `check-narration`, both only after a checker fix made once the results were in (0 of 5 under the
+  checker as pre-registered). Prompt and source changes aimed at the remaining invented durations and savings
+  showed no gain. 6 of 20 audio requests came back ambiguous and each ended `failed` with no audio, cause
+  unknown. See the [narration climb](narration-climb.md).
 - **What it means for you:** treat the local report as the reliable output. Audio is experimental and gated per
   episode: the skill delivers an episode only after `check-narration` accepts it, and otherwise offers one
   regeneration or the local report. Expect more episodes to be rejected than accepted.
@@ -137,8 +138,9 @@ significance nor reliability on private sessions. See [the original protocol](ev
 The [narration climb](narration-climb.md) was pre-registered on 2026-10-21 and amended by the owner the same day
 to one generation per round with a Pareto goal. It tested the two levers this package controls, the uploaded
 narration and the focus prompt, with Brief / short / English on three fictional cases. 20 generations were
-requested in total: 14 produced audio and were scored, and 6 were ambiguous single-send kickoffs that ended
-`failed` on Google's side with no audio (none was resent).
+requested in total: 14 produced audio and were scored. The other 6 kickoffs came back ambiguous (exit 2); each
+was reconciled read-only to exactly one matching artifact, which ended `failed` with no audio. None was resent,
+and the cause (Google or the local single-send path) is unknown.
 
 | Variant | Scored | Accepted | Opening ok |
 |---|---:|---:|---:|
@@ -148,12 +150,14 @@ requested in total: 14 produced audio and were scored, and 6 were ambiguous sing
 | v2 plus “do not mention durations or savings” (amended r2) | 1 | 0 | 1 |
 
 v2's two accepted episodes are counted after the title-line checker fix (a spoken title line no longer makes an
-episode `unverified`). Every rejection was a checker `rejected` decision on a flagged claim or a failed opening;
+episode `unverified`). That fix was made after v2 was scored; under the checker as pre-registered v2 was 0 of 5,
+with those two episodes `unverified` and no claim flagged in either. Every rejection was a checker `rejected` decision on a flagged claim or a failed opening;
 no episode exceeded 150 seconds. The most common remaining failure is a time saving, prevented damage or an
 interval voiced as a measured result. A focus sentence that names it did not stop it in its one scored episode
 (“you absolutely protected the real data”), so it was not shipped.
 
-**Decision.** Ship the opening fix as the Brief default. Keep audio experimental, gated per episode by
+**Decision.** Ship the opening fix as the Brief default. v2 did not meet the pre-registered winner bar (+3 of 6
+over baseline); it ships by the owner's amendment, on the strength of the opening alone. Keep audio experimental, gated per episode by
 `check-narration`: an episode it does not accept is never delivered, and the user is offered one regeneration
 or the local report. With the shipped defaults expect roughly 2 in 5 Brief episodes to pass on cases like these.
 That figure rests on 5 episodes and is directional only; it is not a rate to promise on private sessions.

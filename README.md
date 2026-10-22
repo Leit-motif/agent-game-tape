@@ -155,8 +155,10 @@ an acceptance is strong evidence, not proof.
 Gemini Notebook still embellishes, for example by turning an eight-minute gap into "an 8-minute rollback"
 or calling an untouched table "protected". In a pre-registered study on three fictional cases, naming the
 literal first sentence in the Brief focus fixed the opening (0 of 8 episodes before, 6 of 6 after) and is
-now the default. With it, 2 of 5 Brief episodes passed the checker. Changes aimed at the remaining invented
-durations and savings showed no gain, and 6 of 20 requests failed on Google's side with no audio.
+now the default. With it, 2 of 5 Brief episodes passed the checker (both after a checker fix, made once
+the results were in, that stopped a spoken title line from making an episode `unverified`). Changes aimed at
+the remaining invented durations and savings showed no gain. 6 of 20 audio requests came back ambiguous,
+and each of those ended `failed` with no audio; the cause is unknown.
 
 So the skill treats every episode as unproven until it is checked. If `check-narration` accepts the
 episode, you get the audio with its receipt. If it does not, you are told why and offered one

@@ -156,8 +156,19 @@ class Decisions(Base):
         self.assertIn('s3: not covered', ' '.join(receipt['reasons']))
         self.assertTrue(cc.title_line('Welcome back.'))
         for text in ('This is the brief on your 8 minute rollback.', 'The assistant skipped the check.',
-                     'This is the brief on why the assistant skipped the preview check and published the broken page anyway.'):
+                     'This is the brief on why the assistant skipped the preview check and published the broken page anyway.',
+                     'This is the brief on your eight-minute rollback.', 'This is your debrief on the rollback that saved an hour.',
+                     'Welcome back, you protected the real data.', 'Hey, the assistant deleted the contacts table.',
+                     "Let's dive into how the assistant fixed all three rows."):
             self.assertFalse(cc.title_line(text), text)
+        # Only near the start: a title line as the sixth sentence still needs a claim.
+        tape.save(self.transcript, {'segments': [{'start': float(i), 'end': i + 1.0, 'text': f' {t}'} for i, t in enumerate([
+            'You said, run the regression first.', 'It ran.', 'It kept the failing example.', 'It passed.', 'It published.',
+            'This is the brief on your human AI teamwork.', 'Next time, block publication on the preview.'])]})
+        late = {f's{i}': ('moment', 1) for i in range(1, 6)} | {'s6': ('greeting', None), 's7': ('experiment', None)}
+        receipt = self.run_check(reply(late))
+        self.assertEqual(receipt['decision'], 'unverified')
+        self.assertIn('s6: not covered', ' '.join(receipt['reasons']))
 
     def test_coverage_gap_cannot_hide_established_failure(self):
         flagged_gap = reply(labels={'s5': ('unsupported', None)})

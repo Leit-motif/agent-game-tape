@@ -241,6 +241,8 @@ def build_focus(review, audio_format='deep_dive'):
     template = (ROOT / 'references' / name).read_text().strip()
     if '{{closing}}' not in template:
         raise ValueError('audio focus template must contain {{closing}}')
+    if audio_format == 'brief' and '{{opening}}' not in template:
+        raise ValueError('Brief focus template must contain {{opening}}')
     closing = ('Close with the single experiment for next time and its observable check.' if review.get('experiment')
                else 'Close by reinforcing the supplied useful move to keep.')
     # Naming the literal first sentence cured Brief's generic opening in 5/5 episodes (references/narration-climb.md).

@@ -51,15 +51,17 @@ LIMITS = ('The semantic step is a model judgment and can vary between runs. Sent
           'An accepted receipt does not replace the editorial receipt in full-episode QA.')
 SYSTEM = 'You are a strict provenance checker for narration transcripts. Answer only through the required JSON schema.'
 SPLIT = re.compile(r'(?<=[.!?])\s+')
-# A title or greeting line, recognised from its text rather than from the model's role alone. Brief often speaks its
-# title right after the opening quote, so it is not always a leading greeting.
-TITLE = re.compile(r"^(?:(?:hi|hello|hey|welcome)\b|this is (?:the|your)\b.*\b(?:brief|debrief|deep dive|game tape)\b"
-                   r"|(?:let's|let us) (?:get|dive|jump) (?:into|in|started)\b)", re.I)
+# A title or greeting line, recognised from its whole text rather than from the model's role alone. Brief often speaks
+# its title right after the opening quote, so it is not always a leading greeting. The match is the entire sentence, so
+# a greeting or title that goes on to state anything ("Welcome back, you protected the data.") is not excused.
+TITLE = re.compile(r"(?:(?:hi|hello|hey|welcome(?: back)?)(?: there| everyone)?"
+                   r"|this is (?:the|your) (?:brief|debrief|deep dive|game tape)(?: on your human[- ]?ai teamwork(?: debrief)?)?"
+                   r"|(?:let's|let us) (?:get started|dive in|jump in))[.!]?", re.I)
 TITLE_WINDOW, TITLE_WORDS = 5, 12
 
 
 def title_line(text):
-    return len(text.split()) <= TITLE_WORDS and not re.search(r'\d', text) and bool(TITLE.match(text.strip()))
+    return len(text.split()) <= TITLE_WORDS and not re.search(r'\d', text) and bool(TITLE.fullmatch(text.strip()))
 
 
 def sha256(data):

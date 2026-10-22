@@ -112,8 +112,8 @@ and verbatim scripting are not supported controls to promise. Poll the tracked a
 ready audio. If a remote write is uncertain, reconcile it rather than repeat it.
 
 **Done when:** the exact artifact is generated and downloaded, or its precise pending/failed state is
-reported with the notebook link. Generated is not quality-accepted: do not hand the episode or its link
-to the user before steps 5 and 6.
+reported with the notebook link as a status pointer. Generated is not quality-accepted: do not offer the
+episode, or its link as something to listen to, before steps 5 and 6.
 
 ## 5. Check the whole narration
 
@@ -142,8 +142,9 @@ can invent a duration or a saving that the evidence never recorded.
 - **`accepted`:** deliver the audio or link with the receipt's decision, measured duration, and review scope.
 - **`rejected` or `unverified`:** do not deliver the audio. Tell the user what the receipt flagged, then offer
   exactly one choice: regenerate once, or take the local report alone. A regeneration is a new episode in a
-  new run folder (copy `evidence.json`, `evidence.md` and `review.json`, then `render`, `start`, `wait`,
-  transcribe and `check-narration` again). If the second episode is not accepted either, deliver the local
+  new run folder: copy `evidence.json`, `evidence.md` and `review.json`, `render` with the same `--format`,
+  `--length`, `--language`, `--source` and `--focus` as the first episode, then `start --allow-upload`, `wait
+  --download`, transcribe and `check-narration` again. If the second episode is not accepted either, deliver the local
   report and stop. Never regenerate without asking or more than once.
 - **Not checked** (no transcript, checker unavailable, partial ASR): treat it as not accepted. Never deliver
   an unchecked episode.

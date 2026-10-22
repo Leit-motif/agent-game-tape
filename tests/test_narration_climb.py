@@ -32,7 +32,6 @@ class ClimbVariants(unittest.TestCase):
     def test_affirmative_source_drops_negations_and_intervals(self):
         self.assertEqual(climb.affirmative('It passed. It did not rerun. Eight minutes elapsed.'), 'It passed.')
 
-
     def test_rescore_replays_the_recorded_response(self):
         import tempfile
         import claim_check as cc
