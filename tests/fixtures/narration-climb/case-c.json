@@ -1,0 +1,162 @@
+{
+  "evidence": {
+    "schema": "agent-game-tape/evidence-v1",
+    "window": [
+      "2030-04-10T00:00:00+00:00",
+      "2030-04-11T00:00:00+00:00"
+    ],
+    "timezone": "UTC",
+    "rules": {
+      "R1": "Make the intended outcome and the next observable check concrete before expensive work.",
+      "R2": "Test assumptions with the smallest relevant experiment before committing to a large build.",
+      "R3": "Judge success on the surface the person actually uses, not on an agent's completion claim.",
+      "R4": "Preserve the latest explicit human intent; a missing note is not a missing intention.",
+      "R5": "Match delegation and scope to the task; use explicit handoffs and verify returned artifacts.",
+      "R6": "Separate observed outcomes, assistant reports, unknowns, and hypothetical alternatives.",
+      "R7": "Turn a recurring failure into a checkable procedure, then test whether the change helps."
+    },
+    "rules_sha256": "b9a7c81153a1362beec76afe5de4dd55180379939bb8da070778e61471aa23ee",
+    "previous_review": null,
+    "coverage": [
+      {
+        "harness": "synthetic",
+        "available": true,
+        "files": 1,
+        "events": 6
+      }
+    ],
+    "events": [
+      {
+        "id": "c-1",
+        "session": "c",
+        "harness": "synthetic",
+        "source": "fictional.jsonl",
+        "line": 0,
+        "timestamp": "2030-04-10T09:00:00+00:00",
+        "role": "human",
+        "text": "Run the migration on the fifty-row sample copy first. Leave the full contacts table alone until we see the rejects.",
+        "truncated": false,
+        "in_window": true
+      },
+      {
+        "id": "c-2",
+        "session": "c",
+        "harness": "synthetic",
+        "source": "fictional.jsonl",
+        "line": 2,
+        "timestamp": "2030-04-10T09:02:00+00:00",
+        "role": "assistant",
+        "text": "I will migrate the sample copy only and report every rejected row before touching the full table.",
+        "truncated": false,
+        "in_window": true
+      },
+      {
+        "id": "c-3",
+        "session": "c",
+        "harness": "synthetic",
+        "source": "fictional.jsonl",
+        "line": 6,
+        "timestamp": "2030-04-10T09:06:00+00:00",
+        "role": "tool",
+        "text": "Sample migration: 50 rows read, 47 migrated, 3 rejected (blank signup_date). Full contacts table: untouched.",
+        "truncated": false,
+        "in_window": true
+      },
+      {
+        "id": "c-4",
+        "session": "c",
+        "harness": "synthetic",
+        "source": "fictional.jsonl",
+        "line": 14,
+        "timestamp": "2030-04-10T09:14:00+00:00",
+        "role": "human",
+        "text": "Hand the date-format fix to the helper agent, and show me its diff before anything merges.",
+        "truncated": false,
+        "in_window": true
+      },
+      {
+        "id": "c-5",
+        "session": "c",
+        "harness": "synthetic",
+        "source": "fictional.jsonl",
+        "line": 31,
+        "timestamp": "2030-04-10T09:31:00+00:00",
+        "role": "assistant",
+        "text": "The helper says it fixed all three rejected rows and its tests pass. I have not seen its diff yet.",
+        "truncated": false,
+        "in_window": true
+      },
+      {
+        "id": "c-6",
+        "session": "c",
+        "harness": "synthetic",
+        "source": "fictional.jsonl",
+        "line": 33,
+        "timestamp": "2030-04-10T09:33:00+00:00",
+        "role": "tool",
+        "text": "Helper handoff returned at 09:31. Diff attached: no. Sample rerun after fix: not recorded. Merge: none.",
+        "truncated": false,
+        "in_window": true
+      }
+    ]
+  },
+  "review": {
+    "status": "reviewed",
+    "moments": [
+      {
+        "title": "A sample run before the real table",
+        "workstream": "migration",
+        "human_event": "c-1",
+        "human_quote": "Run the migration on the fifty-row sample copy first. Leave the full contacts table alone until we see the rejects.",
+        "action": "The assistant migrated only the sample copy, as you asked. The tool result records fifty rows read, forty-seven migrated and three rejected for a blank signup date, with the full contacts table untouched.",
+        "outcome": "The record confirms the sample run, the three rejects and that the full table was not touched. It does not show what a full-table run would have done, so there is no measured amount of avoided damage or cleanup to claim.",
+        "lesson": "The repeatable move is to make a small copy reveal its rejects before the real data is touched, then decide the next step from those rejects.",
+        "rule_id": "R2",
+        "verdict": "good call",
+        "responsibility": "human",
+        "causal_basis": "Your instruction set the sample-first order, and the next assistant action and tool result followed it.",
+        "assurance": "verified",
+        "evidence": [
+          {
+            "event": "c-3",
+            "quote": "Sample migration: 50 rows read, 47 migrated, 3 rejected (blank signup_date). Full contacts table: untouched."
+          }
+        ]
+      },
+      {
+        "title": "A helper's report is not a returned diff",
+        "workstream": "handoff",
+        "human_event": "c-4",
+        "human_quote": "Hand the date-format fix to the helper agent, and show me its diff before anything merges.",
+        "action": "The assistant relayed the helper's report that all three rejected rows were fixed and its tests passed, and said plainly that it had not seen the helper's diff. The tool result records that no diff was attached, no sample rerun was recorded, and nothing was merged.",
+        "outcome": "Seventeen minutes elapsed between the handoff instruction and the helper's return. That is an elapsed interval, not measured helper or human labor. The fix and the passing tests remain the helper's report, relayed by the assistant; no diff or rerun confirms them. Nothing merged, so your condition was not crossed, but whether the fix works is unknown.",
+        "lesson": "When you delegate, the returned artifact is the receipt. Your diff condition is still open; ask for the diff and a sample rerun rather than accepting the helper's summary.",
+        "rule_id": "R5",
+        "verdict": "unclear",
+        "responsibility": "unknown",
+        "causal_basis": "The record does not show why no diff was returned or whether the fix is correct, so attribution is unknown.",
+        "assurance": "unknown",
+        "evidence": [
+          {
+            "event": "c-5",
+            "quote": "I have not seen its diff yet."
+          },
+          {
+            "event": "c-6",
+            "quote": "Diff attached: no. Sample rerun after fix: not recorded. Merge: none."
+          }
+        ]
+      }
+    ],
+    "blind_spots": [
+      "The fictional record contains no helper diff, no post-fix sample rerun, and no full-table migration result."
+    ],
+    "experiment": {
+      "change": "For the next delegated fix, have the assistant require the helper to return its diff and a sample rerun result together before reporting the work as done.",
+      "next_check": "In the next handoff record, look for both the diff and the rerun result before any merge; if either is missing, keep the fix unaccepted and its outcome unknown.",
+      "moment_numbers": [
+        2
+      ]
+    }
+  }
+}

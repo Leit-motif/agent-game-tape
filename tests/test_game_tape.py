@@ -127,6 +127,14 @@ class ReviewChecks(unittest.TestCase):
         ratio = len(prose.split()) / len(fielded.split())
         self.assertLess(abs(1 - ratio), .1)
 
+    def test_brief_focus_names_the_literal_first_sentence(self):
+        focus = tape.build_focus(self.review, 'brief')
+        first = self.review['moments'][0]['human_quote']
+        self.assertIn(f'Open with this first sentence, word for word: You said, “{first}” Then cover the selected decisions', focus)
+        self.assertNotIn('{{', focus)
+        self.assertIn('Begin with the first decision', tape.build_focus(self.review))  # Deep Dive was not measured; unchanged
+        self.assertIn('Begin with the first decision', tape.build_focus({**self.review, 'moments': []}, 'brief'))
+
     def test_brief_focus_does_not_force_a_moment_count_or_experiment(self):
         self.review['moments'] = self.review['moments'][:1]
         self.review['experiment'] = None

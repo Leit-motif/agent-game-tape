@@ -43,8 +43,10 @@ passed to the audio request.
 **Focus.** The bundled template is `references/audio-focus.txt` (`audio-focus-brief.txt` for Brief). It asks
 for direct coaching, grounded consequences and a usable close. It does not list every mistake the hosts must
 avoid, because those prohibitions can themselves become dialogue. Factual limits belong in the evidence and
-the reviewer, not in a longer list of requests. Override the focus only when the user wants a different
-emphasis. The manifest records `focus_origin: bundled` or `caller`.
+the reviewer, not in a longer list of requests. The Brief focus names the literal first sentence (`You said,
+“<first quote>”`): with “Begin with the first decision” Brief opened with a generic preamble in 8 of 8
+episodes, and with the literal sentence it opened on the quote in 6 of 6 ([narration climb](narration-climb.md)).
+Override the focus only when the user wants a different emphasis. The manifest records `focus_origin: bundled` or `caller`.
 
 **Web research.** Gemini Notebook can discover and add outside sources. This skill never turns that on.
 Outside facts have no evidence ids, so the narration could no longer be checked claim by claim against

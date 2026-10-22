@@ -31,7 +31,26 @@ scoring audio. Neither arm may add facts or better advice that the other arm lac
 - The single proposed experiment: keep artifact and post-restart experience receipts separate and require
   both before acceptance. This is a proposed next check, not an observed improvement.
 
-## Editorial checks shared by both
+## Case C
+
+- The human asks for the migration to run on a fifty-row sample copy first, leaving the full contacts
+  table alone until the rejects are seen. The assistant follows it.
+- The tool records 50 rows read, 47 migrated, 3 rejected for a blank signup_date, full table untouched.
+  These are sample counts, not full-table results, and the three are rejected rows, not found bugs.
+- No full-table run exists. No measured avoided damage, cleanup or time saving exists.
+- Later the human delegates the date-format fix to a helper agent and conditions merging on seeing its diff.
+- The assistant relays the helper's claim that all three rows are fixed and its tests pass, and says it has
+  not seen the diff. That claim is a helper report relayed by the assistant, not a confirmed result.
+- The later tool result records the handoff returned at 09:31, no diff attached, no post-fix sample rerun
+  recorded, and no merge. The merge condition was not crossed.
+- Seventeen minutes elapsed from the 09:14 handoff instruction to the 09:31 return. This is not measured
+  helper or human labor.
+- Whether the fix works, and why no diff was returned, remain unknown. Neither success nor failure follows.
+- The single proposed experiment: require the helper's diff and a sample rerun result together before the
+  work is reported done; check both before any merge in the next handoff. That experiment is a proposal,
+  not something the tape proves has been implemented.
+
+## Editorial checks shared by all cases
 
 Address the listener as 'you'; preserve two moments in order; explain a repeatable move rather than
 narrating tools; preserve the distinctions above; close with the single proposed experiment. No generic

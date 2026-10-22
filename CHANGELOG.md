@@ -4,6 +4,22 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- The bundled Brief focus names the literal first sentence (`You said, “<first quote>”`) instead of asking
+  to begin with the first decision. In the narration climb it opened on the quote in 6 of 6 episodes, against 0 of 8.
+- The skill delivers audio only after `check-narration` accepts the episode. A rejected or unverified episode
+  is not delivered: the user is offered one regeneration or the local report alone. With the new Brief default,
+  2 of 5 fictional study episodes were accepted, both only after the fix below; audio stays experimental.
+
+### Fixed
+
+- `check-narration` no longer marks an episode `unverified` because of a spoken title line such as
+  “This is the brief on your human AI teamwork.” left without a claim. Only a whole title or greeting
+  sentence among the first five is excused; one that states anything still needs a claim.
+
 ## [0.1.0] - 2026-10-21
 
 First public release. The local report is the product; Gemini Notebook (formerly NotebookLM) audio is

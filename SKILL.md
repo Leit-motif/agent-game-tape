@@ -112,7 +112,8 @@ and verbatim scripting are not supported controls to promise. Poll the tracked a
 ready audio. If a remote write is uncertain, reconcile it rather than repeat it.
 
 **Done when:** the exact artifact is generated and downloaded, or its precise pending/failed state is
-reported with the notebook link. Generated is not quality-accepted.
+reported with the notebook link as a status pointer. Generated is not quality-accepted: do not offer the
+episode, or its link as something to listen to, before steps 5 and 6.
 
 ## 5. Check the whole narration
 
@@ -129,8 +130,26 @@ python3 "$SKILL_DIR/scripts/game_tape.py" check-narration --run "$RUN" --transcr
 The duration is an example; supply measured seconds. `check-narration` uses the tested model by default.
 If the user overrides `--model`, tell them the receipt is labelled `unvalidated`: the checker was validated
 only with the tested model. Regex flags and apparent timestamp coverage do not certify truth or sound
-quality. Report the review scope explicitly. A material invented claim rejects the episode; preserve the
-output and bounded failure report rather than silently regenerating until it sounds good.
+quality. Report the review scope explicitly.
 
-**Done when:** local report plus requested audio/link are delivered with an honest quality status,
-material findings, and any unverified portion named. Never call an opening-only check a full-episode pass.
+**Done when:** a `check-narration` receipt covers the complete transcript of this exact episode.
+
+## 6. Deliver only a checked episode
+
+Audio is experimental and gated per episode. The gate is `check-narration`, not Gemini Notebook: a narration
+can invent a duration or a saving that the evidence never recorded.
+
+- **`accepted`:** deliver the audio or link with the receipt's decision, measured duration, and review scope.
+- **`rejected` or `unverified`:** do not deliver the audio. Tell the user what the receipt flagged, then offer
+  exactly one choice: regenerate once, or take the local report alone. A regeneration is a new episode in a
+  new run folder: copy `evidence.json`, `evidence.md` and `review.json`, `render` with the same `--format`,
+  `--length`, `--language`, `--source` and `--focus` as the first episode, then `start --allow-upload`, `wait
+  --download`, transcribe and `check-narration` again. If the second episode is not accepted either, deliver the local
+  report and stop. Never regenerate without asking or more than once.
+- **Not checked** (no transcript, checker unavailable, partial ASR): treat it as not accepted. Never deliver
+  an unchecked episode.
+
+Keep every generated file, transcript and receipt, including rejected ones, so the failure stays reviewable.
+
+**Done when:** the local report is delivered, plus either an accepted episode with its receipt or a plain
+statement of why no episode is delivered. Never call an opening-only check a full-episode pass.
