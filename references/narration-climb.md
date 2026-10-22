@@ -127,3 +127,62 @@ ASR errors can look like narration errors. A passing episode is not proof the ne
 ## Results
 
 Appended after each round.
+
+### v0–v2 (as recorded in the runtime round READMEs, 2026-10-21)
+
+| Round | Generations | Scored | Accepted | Opening ok | Failure types | Harness errors |
+|---|---|---|---|---|---|---|
+| v0 baseline | 6 | 4 | 0 | 0/4 | opening, strengthened:blame_shift, strengthened:other, strengthened:unmeasured_as_measured | 2 (ambiguous send, artifact `failed`) |
+| v1 affirmative source | 6 | 4 | 0 | 0/4 | opening, strengthened:other, strengthened:proposal_as_result, unsupported | 2 (same) |
+| v2 first-sentence focus | 6 | 5 | 0 | 5/5 | strengthened:interval_as_labor, strengthened:other, strengthened:unmeasured_as_measured, unverified | 1 (ledger n=18, artifact `07c51059` ended `failed`) |
+
+Under the keep rule no variant was kept (v1 and v2 each added a failure type absent from the baseline) and none
+gained; incumbent v0. v3 (no-overview focus, committed in c29ccba) was prepared but never kicked off. 18 of 24
+generations used.
+
+## Protocol amendment (owner rulings), 2026-10-21
+
+Recorded before any further generation. Everything above this heading, including the v0–v2 results, is unchanged.
+
+The owner (Amrit) ruled, 2026-10-21:
+
+> 20:52: "You are doing too many generations per epoch. Let's do one at a time."
+
+> 20:53: "Be reasonable considering that this is not our platform. This is Google. It feels relatively opaque.
+> We're looking for that pareto minimum."
+
+Reading: the goal is the smallest set of changes that buys most of the fidelity, not a fact-perfect renderer.
+Product reliability comes from the per-episode gate (`check-narration` rejects a bad episode; the local report is
+always the fallback), not from Google's output. What changes from here:
+
+1. **v3 is superseded.** It is never kicked off; its prepared folders stay as they are, unused.
+2. **Checker gap fixed before scoring anything new.** A sentence the checker labels `greeting` that is
+   mechanically a title or greeting line (for example Brief's "This is the brief on your human AI teamwork.",
+   which it speaks right after the opening quote) no longer makes an episode `unverified` when it is left
+   without a claim. The test is lexical, not the model's role alone, so a content sentence mislabelled
+   `greeting` mid-narration still makes the output invalid. The two v2 `unverified` episodes are rescored by
+   re-validating their recorded roles and claims (no new model call) into new files; the original receipts and
+   `score.json` files are kept.
+3. **Start point: v2's opening fix.** Owner direction. It cured the opening on 5/5 episodes (v0/v1: 0/8); the
+   failure types that kept it from the incumbent under the keep rule were the checker fault in (2) and the
+   eight-minute interval claim, which is the same failure the 2026-10-19 Brief study and this study's scorer
+   sanity check found with the baseline renderer.
+4. **At most 4 more generations (ledger n=19–22), one per round, strictly sequential.** Each round: one
+   generation of the current variant on one case, then download, transcribe, score; only then the next
+   change, committed with its code before its generation. Case rotation: A, C, B, A. Round folders are
+   `rN/case-X/rep-1` under the same climb root. Same fixed settings, scorer, acceptance bar (checker
+   `accepted`, opening ok, at most 150 s) and quota gate as above.
+5. **Change choice.** Each change targets the most frequent failure type remaining in scored episodes of the
+   current variant's lineage (v0 and v2 share the main source). Round 1's change is chosen from the v0–v2
+   failures before its generation.
+6. **Gain and stopping.** A round's change shows a gain when its episode is accepted. Stop as soon as a change
+   shows no gain, or when the 4 generations are used. A failed generation (no downloadable audio) is a harness
+   error: it uses budget, says nothing about the change, and the next round runs the same variant on the next
+   case. No change is made after the last generation.
+7. **What ships.** v2's opening fix becomes the bundled Brief default whatever the rounds show. A later change
+   ships only if its round showed a gain. Audio stays experimental and is gated per episode: an episode that
+   `check-narration` does not accept is never delivered; the user is offered one regeneration or the local
+   report.
+
+With one generation per round every result is an anecdote, not a rate. The amendment trades statistical power
+for the owner's stated priority: little platform use and a working per-episode gate.
