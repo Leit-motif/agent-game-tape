@@ -146,7 +146,7 @@ and the cause (Google or the local single-send path) is unknown.
 |---|---:|---:|---:|
 | Baseline Brief focus (v0) | 4 | 0 | 0 |
 | Affirmative-only source (v1) | 4 | 0 | 0 |
-| First-sentence opening (v2, now the default) | 5 | 2 | 5 |
+| First-sentence opening (v2, now the default) | 5 | 2 (0 as pre-registered) | 5 |
 | v2 plus “do not mention durations or savings” (amended r2) | 1 | 0 | 1 |
 
 v2's two accepted episodes are counted after the title-line checker fix (a spoken title line no longer makes an
