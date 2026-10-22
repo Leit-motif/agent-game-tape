@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'scripts'))
 sys.path.insert(0, str(ROOT / 'examples'))
 import make_demo  # noqa: E402
-from game_tape import build_focus, load, narration, save, validate  # noqa: E402
+from game_tape import load, narration, save, validate  # noqa: E402
 
 FORMAT, LENGTH, LANGUAGE, MAX_SECONDS = 'brief', 'short', 'en', 150.0
 CASE_C = ROOT / 'tests' / 'fixtures' / 'narration-climb' / 'case-c.json'
@@ -63,6 +63,18 @@ def narration_affirmative(bundle, review):
 
 # v2 (H2): the focus names the literal first sentence instead of "Begin with the first decision".
 BEGIN = 'Begin with the first decision in Game tape and cover the selected decisions in that order.'
+# The bundled Brief focus as the study froze it (v0). The shipped default now carries v2's opening, so the
+# baseline is kept here to keep every earlier round reproducible byte for byte.
+V0_BRIEF = ('A short coaching debrief spoken directly to the person reviewing their human–AI teamwork, using “you” for that '
+            'person and “the assistant” for the agent. ' + BEGIN + ' State each recorded call, the supported result with its '
+            'uncertainty, and its practical lesson; keep the distinction between what the assistant reported and what the '
+            'record confirmed. {{closing}} Keep the debrief on those decisions and that supplied closing.')
+
+
+def build_focus(review, audio_format=FORMAT):
+    closing = ('Close with the single experiment for next time and its observable check.' if review.get('experiment')
+               else 'Close by reinforcing the supplied useful move to keep.')
+    return V0_BRIEF.replace('{{closing}}', closing)
 
 
 def focus_first_sentence(review):

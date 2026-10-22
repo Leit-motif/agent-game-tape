@@ -23,6 +23,12 @@ class ClimbVariants(unittest.TestCase):
             v2, r1 = climb.FOCUSES['first-sentence'](review), climb.FOCUSES['first-sentence-no-durations'](review)
             self.assertEqual(r1.replace(' ' + climb.NO_DURATIONS, ''), v2, name)
 
+    def test_shipped_brief_focus_is_the_measured_v2_focus(self):
+        from game_tape import build_focus
+        for name, (_, review) in climb.cases().items():
+            self.assertEqual(build_focus(review, 'brief'), climb.FOCUSES['first-sentence'](review), name)
+            self.assertIn(climb.BEGIN, climb.FOCUSES['bundled'](review), name)  # v0 baseline stays frozen
+
     def test_affirmative_source_drops_negations_and_intervals(self):
         self.assertEqual(climb.affirmative('It passed. It did not rerun. Eight minutes elapsed.'), 'It passed.')
 
