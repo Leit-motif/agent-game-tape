@@ -9,8 +9,14 @@
   [checker evaluation](checker-eval.md).
 - **What failed:** raw Gemini Notebook narration added claims the evidence did not support in both Deep Dive
   trials and both fictional Brief episodes. Full-episode review caught every one of them.
-- **What it means for you:** treat the local report as the reliable output. Audio is experimental. Run the
-  checks on each episode before you trust it, and expect some episodes to be rejected.
+- **What the narration climb found (2026-10-21/22):** naming the literal first sentence in the Brief focus fixed
+  the opening (0 of 8 episodes before, 6 of 6 after); it is now the default. With it, 2 of 5 scored Brief episodes
+  passed `check-narration`. Prompt and source changes aimed at the remaining invented durations and savings
+  showed no gain. 6 of 20 requests ended in a Google-side `failed` artifact with no audio. See the
+  [narration climb](narration-climb.md).
+- **What it means for you:** treat the local report as the reliable output. Audio is experimental and gated per
+  episode: the skill delivers an episode only after `check-narration` accepts it, and otherwise offers one
+  regeneration or the local report. Expect more episodes to be rejected than accepted.
 
 *Naming note:* NotebookLM was renamed Gemini Notebook. This record keeps the name used at the time.
 
@@ -18,7 +24,7 @@
 veto = a single failure that rejects an episode regardless of its total score; admission = the
 preconditions checked before a study may start; ASR = automatic speech recognition (transcription).
 
-The full record follows, unchanged.
+The full record follows. Earlier sections are unchanged; the narration climb is summarized at the end.
 
 ---
 
@@ -125,3 +131,29 @@ These are two development observations, one realization per case: headroom to te
 points. They establish neither a population noise floor, general format superiority, statistical
 significance nor reliability on private sessions. See [the original protocol](evaluation-protocol.md),
 [frozen facts](../examples/fact-sheet.md), and [full-episode QA](audio-qa.md).
+
+## Narration climb: opening fixed, fidelity not; audio ships gated per episode
+
+The [narration climb](narration-climb.md) was pre-registered on 2026-10-21 and amended by the owner the same day
+to one generation per round with a Pareto goal. It tested the two levers this package controls, the uploaded
+narration and the focus prompt, with Brief / short / English on three fictional cases. 20 generations were
+requested in total: 14 produced audio and were scored, and 6 were ambiguous single-send kickoffs that ended
+`failed` on Google's side with no audio (none was resent).
+
+| Variant | Scored | Accepted | Opening ok |
+|---|---:|---:|---:|
+| Baseline Brief focus (v0) | 4 | 0 | 0 |
+| Affirmative-only source (v1) | 4 | 0 | 0 |
+| First-sentence opening (v2, now the default) | 5 | 2 | 5 |
+| v2 plus “do not mention durations or savings” (amended r2) | 1 | 0 | 1 |
+
+v2's two accepted episodes are counted after the title-line checker fix (a spoken title line no longer makes an
+episode `unverified`). Every rejection was a checker `rejected` decision on a flagged claim or a failed opening;
+no episode exceeded 150 seconds. The most common remaining failure is a time saving, prevented damage or an
+interval voiced as a measured result. A focus sentence that names it did not stop it in its one scored episode
+(“you absolutely protected the real data”), so it was not shipped.
+
+**Decision.** Ship the opening fix as the Brief default. Keep audio experimental, gated per episode by
+`check-narration`: an episode it does not accept is never delivered, and the user is offered one regeneration
+or the local report. With the shipped defaults expect roughly 2 in 5 Brief episodes to pass on cases like these.
+That figure rests on 5 episodes and is directional only; it is not a rate to promise on private sessions.

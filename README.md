@@ -10,8 +10,8 @@ the vague one that cost a rework, the "done" you never checked. Agent Game Tape 
 sessions into a short, evidence-backed debrief so you get better at steering AI.
 
 The local report is the product. Every lesson cites exact quotes and events from your own sessions. An
-optional Gemini Notebook (formerly NotebookLM) audio episode can retell it, and that episode is checked
-claim by claim against the evidence (`check-narration`) before anyone calls it accurate.
+optional Gemini Notebook (formerly NotebookLM) audio episode can retell it. Audio is experimental: each
+episode is checked claim by claim against the evidence (`check-narration`) and delivered only if it passes.
 
 ## Quickstart (about 60 seconds)
 
@@ -150,9 +150,19 @@ This is a small development set built from fictional sessions: two scenarios,
 Brief-length episodes, and no held-out set. Treat the result as directional. A rejection is actionable;
 an acceptance is strong evidence, not proof.
 
-Gemini Notebook itself still embellishes sometimes, for example by turning an eight-minute gap into "an
-8-minute rollback". That is why every episode is checked rather than trusted. Full method and
-round-by-round results: [checker evaluation](references/checker-eval.md),
+## Audio status: experimental, gated per episode
+
+Gemini Notebook still embellishes, for example by turning an eight-minute gap into "an 8-minute rollback"
+or calling an untouched table "protected". In a pre-registered study on three fictional cases, naming the
+literal first sentence in the Brief focus fixed the opening (0 of 8 episodes before, 6 of 6 after) and is
+now the default. With it, 2 of 5 Brief episodes passed the checker. Changes aimed at the remaining invented
+durations and savings showed no gain, and 6 of 20 requests failed on Google's side with no audio.
+
+So the skill treats every episode as unproven until it is checked. If `check-narration` accepts the
+episode, you get the audio with its receipt. If it does not, you are told why and offered one
+regeneration or the local report alone; an unchecked episode is never delivered. These numbers come
+from small fictional samples and are directional only. Full method and results:
+[narration climb](references/narration-climb.md), [checker evaluation](references/checker-eval.md),
 [validation record](references/validation.md).
 
 ## Privacy
