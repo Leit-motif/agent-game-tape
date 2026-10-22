@@ -186,3 +186,13 @@ always the fallback), not from Google's output. What changes from here:
 
 With one generation per round every result is an anecdote, not a rate. The amendment trades statistical power
 for the owner's stated priority: little platform use and a working per-episode gate.
+
+### Checker fix and v2 rescore (amendment item 2)
+
+`claim_check._validate` excuses an uncovered `greeting` that is a title or greeting line by its text (at most 12
+words, no digits, a title or greeting form) among the first five sentences. Replaying all 13 recorded receipts
+through the new validation reproduced every label and role and changed two decisions, both v2 Case B, from
+`unverified` to `accepted` (97.2 s and 85.2 s, opening ok, no flagged claim). Every other decision is unchanged;
+v2 Case A rep 1 and Case C rep 1 had the same uncovered title line but stay `rejected` on their flagged claims.
+The checker-evaluation round had no `unverified` decision, and the change only removes coverage problems, so
+none of its 54 decisions can change. v2 after rescore: 2 of 5 scored episodes accepted (v0: 0/4, v1: 0/4).

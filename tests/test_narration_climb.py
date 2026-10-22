@@ -22,5 +22,28 @@ class ClimbVariants(unittest.TestCase):
         self.assertEqual(climb.affirmative('It passed. It did not rerun. Eight minutes elapsed.'), 'It passed.')
 
 
+    def test_rescore_replays_the_recorded_response(self):
+        import tempfile
+        import claim_check as cc
+        from game_tape import save
+        _, (bundle, review) = sorted(climb.cases().items())[0]
+        with tempfile.TemporaryDirectory() as folder:
+            transcript = Path(folder) / 'audio.json'
+            save(transcript, {'segments': [{'start': 0, 'end': 2, 'text': ' This is the brief on your game tape.'},
+                                           {'start': 2, 'end': 5, 'text': ' It rolled back after eight minutes.'},
+                                           {'start': 5, 'end': 8, 'text': ' Next time, block publication on the preview.'}]})
+            response = {'sentences': [{'id': 's1', 'role': 'greeting', 'moment': None}, {'id': 's2', 'role': 'moment', 'moment': 2},
+                                      {'id': 's3', 'role': 'experiment', 'moment': None}],
+                        'claims': [{'sentences': ['s2'], 'text': 'eight-minute rollback', 'label': 'strengthened',
+                                    'strength_change': 'interval_as_labor', 'evidence': ['review:m2'], 'moment': 2, 'rationale': 'r'},
+                                   {'sentences': ['s3'], 'text': 'block publication', 'label': 'non-factual',
+                                    'strength_change': None, 'evidence': [], 'moment': None, 'rationale': 'r'}]}
+            first = cc.check(transcript, bundle, review, cc.FakeBackend(response))
+            again = cc.check(transcript, bundle, review, cc.FakeBackend(climb.recorded_response(first)))
+        self.assertEqual(first['decision'], 'rejected')
+        for key in ('decision', 'reasons', 'claims', 'roles', 'opening'):
+            self.assertEqual(again[key], first[key], key)
+
+
 if __name__ == '__main__':
     unittest.main()

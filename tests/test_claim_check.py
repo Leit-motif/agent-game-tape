@@ -139,6 +139,26 @@ class Decisions(Base):
                 self.assertIn(reason, ' '.join(receipt['reasons']))
         self.assertEqual(len(self.run_check(bad)['claims']), 4)  # recorded as returned
 
+    def test_title_line_after_the_opening_quote_needs_no_claim(self):
+        # Brief speaks its title right after the quoted first sentence; that must not make the episode unverified.
+        tape.save(self.transcript, {'segments': [
+            {'start': 0.0, 'end': 3.0, 'text': ' You said, run the regression first.'},
+            {'start': 3.0, 'end': 5.0, 'text': ' This is the brief on your human AI teamwork.'},
+            {'start': 5.0, 'end': 8.0, 'text': ' It ran and kept the failing example.'},
+            {'start': 8.0, 'end': 11.0, 'text': ' Next time, block publication on the preview.'}]})
+        roles = {'s1': ('moment', 1), 's2': ('greeting', None), 's3': ('moment', 1), 's4': ('experiment', None)}
+        receipt = self.run_check(reply(roles))
+        self.assertEqual((receipt['decision'], receipt['reasons']), ('accepted', []))
+        self.assertTrue(receipt['opening']['ok'])
+        # A content sentence the model calls a greeting is still not excused.
+        receipt = self.run_check(reply({**roles, 's3': ('greeting', None)}))
+        self.assertEqual(receipt['decision'], 'unverified')
+        self.assertIn('s3: not covered', ' '.join(receipt['reasons']))
+        self.assertTrue(cc.title_line('Welcome back.'))
+        for text in ('This is the brief on your 8 minute rollback.', 'The assistant skipped the check.',
+                     'This is the brief on why the assistant skipped the preview check and published the broken page anyway.'):
+            self.assertFalse(cc.title_line(text), text)
+
     def test_coverage_gap_cannot_hide_established_failure(self):
         flagged_gap = reply(labels={'s5': ('unsupported', None)})
         del flagged_gap['claims'][2]  # s4 uncovered, but s5 is an established failure

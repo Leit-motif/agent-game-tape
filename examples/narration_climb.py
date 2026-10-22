@@ -127,17 +127,52 @@ def digest(path):
 def score(args):
     run = Path(args.run).expanduser().resolve()
     audio = run / 'audio.m4a'
-    seconds = float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of',
-                                    'default=noprint_wrappers=1:nokey=1', str(audio)], check=True, capture_output=True, text=True).stdout)
     asr = run / 'asr'
     if not (asr / 'audio.json').exists():
         subprocess.run([args.whisper, str(audio), '--model', 'small', '--language', 'en', '--output_format', 'json',
                         '--output_dir', str(asr), '--fp16', 'False'], check=True, capture_output=True, text=True)
-    transcript = asr / 'audio.json'
     receipt_path = run / 'narration-check.json'
     if not receipt_path.exists():
         subprocess.run([sys.executable, str(ROOT / 'scripts' / 'game_tape.py'), 'check-narration', '--run', str(run),
-                        '--transcript', str(transcript), '--out', str(receipt_path)], capture_output=True, text=True)
+                        '--transcript', str(asr / 'audio.json'), '--out', str(receipt_path)], capture_output=True, text=True)
+    summarize(run, receipt_path, run / 'score.json')
+
+
+def recorded_response(receipt):
+    """The backend output a receipt recorded (roles and claims), in the backend's own shape."""
+    sentences = []
+    for sid, role in receipt['roles'].items():
+        kind, _, n = role.partition(':')
+        sentences.append({'id': sid, 'role': kind, 'moment': int(n) if n else None})
+    claims = []
+    for c in receipt['claims']:
+        label, _, slug = (c['label'] or '').partition(':')
+        claims.append({'sentences': c['sentences'], 'text': c['text'], 'label': label or None, 'strength_change': slug or None,
+                       'evidence': c['evidence'], 'moment': c['moment'], 'rationale': c['rationale']})
+    return {'sentences': sentences, 'claims': claims}
+
+
+def rescore(args):
+    """Re-validate a recorded receipt with the current checker code; no model call. Writes new files, keeps the old."""
+    import claim_check
+    run = Path(args.run).expanduser().resolve()
+    old = load(run / 'narration-check.json')
+    receipt = claim_check.check(run / 'asr' / 'audio.json', load(run / 'evidence.json'), load(run / 'review.json'),
+                                claim_check.FakeBackend(recorded_response(old)))
+    receipt['backend'] = {**old['backend'], 'rescored_from': 'narration-check.json',
+                          'rescored_with': 'recorded roles and claims, current validation; no new model call'}
+    receipt_path = run / 'narration-check.rescore.json'
+    for path in (receipt_path, run / 'score.rescore.json'):
+        if path.exists():
+            raise SystemExit(f'refusing to overwrite {path}')
+    save(receipt_path, receipt)
+    summarize(run, receipt_path, run / 'score.rescore.json', previous=load(run / 'score.json'))
+
+
+def summarize(run, receipt_path, out, previous=None):
+    audio, transcript = run / 'audio.m4a', run / 'asr' / 'audio.json'
+    seconds = float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of',
+                                    'default=noprint_wrappers=1:nokey=1', str(audio)], check=True, capture_output=True, text=True).stdout)
     receipt = load(receipt_path)
     review = load(run / 'review.json')
     failures = []
@@ -165,15 +200,19 @@ def score(args):
               'failures': sorted(set(failures)), 'flagged_claims': sum(f != 'opening' and f != 'duration' for f in failures),
               'coverage_ok': covered, 'checker_model': receipt.get('backend', {}).get('model'),
               'accepted': receipt['decision'] == 'accepted' and opening_ok and seconds <= MAX_SECONDS}
-    save(run / 'score.json', result)
+    if previous:
+        result['previous'] = {k: previous[k] for k in ('decision', 'failures', 'accepted')}
+    save(out, result)
     print(json.dumps(result, indent=2))
 
 
 def table(args):
     rows = []
-    for path in sorted(Path(args.root).expanduser().glob('v*/case-*/rep-*/score.json')):
-        s = load(path)
-        rows.append({'round': path.parts[-4], 'case': path.parts[-3], 'rep': path.parts[-2], **{k: s[k] for k in (
+    root = Path(args.root).expanduser()
+    for path in sorted([*root.glob('v*/case-*/rep-*/score.json'), *root.glob('r*/case-*/rep-*/score.json')]):
+        rescored = path.with_name('score.rescore.json')
+        s = load(rescored if rescored.exists() else path)
+        rows.append({'round': path.parts[-4], 'case': path.parts[-3], 'rep': path.parts[-2], 'rescored': rescored.exists(), **{k: s[k] for k in (
             'accepted', 'seconds', 'decision', 'opening_ok', 'failures', 'flagged_claims', 'coverage_ok')}})
     for row in rows:
         print(json.dumps(row))
@@ -203,6 +242,9 @@ def main():
     q.add_argument('run')
     q.add_argument('--whisper', default='whisper')
     q.set_defaults(fn=score)
+    q = sub.add_parser('rescore', help='re-validate a recorded receipt with the current checker; writes *.rescore.json')
+    q.add_argument('run')
+    q.set_defaults(fn=rescore)
     q = sub.add_parser('table', help='aggregate score.json files under a climb root')
     q.add_argument('root')
     q.set_defaults(fn=table)

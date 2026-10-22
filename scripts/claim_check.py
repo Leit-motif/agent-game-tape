@@ -51,6 +51,15 @@ LIMITS = ('The semantic step is a model judgment and can vary between runs. Sent
           'An accepted receipt does not replace the editorial receipt in full-episode QA.')
 SYSTEM = 'You are a strict provenance checker for narration transcripts. Answer only through the required JSON schema.'
 SPLIT = re.compile(r'(?<=[.!?])\s+')
+# A title or greeting line, recognised from its text rather than from the model's role alone. Brief often speaks its
+# title right after the opening quote, so it is not always a leading greeting.
+TITLE = re.compile(r"^(?:(?:hi|hello|hey|welcome)\b|this is (?:the|your)\b.*\b(?:brief|debrief|deep dive|game tape)\b"
+                   r"|(?:let's|let us) (?:get|dive|jump) (?:into|in|started)\b)", re.I)
+TITLE_WINDOW, TITLE_WORDS = 5, 12
+
+
+def title_line(text):
+    return len(text.split()) <= TITLE_WORDS and not re.search(r'\d', text) and bool(TITLE.match(text.strip()))
 
 
 def sha256(data):
@@ -315,9 +324,11 @@ def _validate(response, sents, packet):
         moment = claim.get('moment')
         if moment is not None and (type(moment) is not int or not 1 <= moment <= count):
             problems.append(f'{cid}: invalid moment {moment!r}')
-    # Only leading greetings may go uncovered; a later 'greeting' must not hide a claim.
+    # Leading greetings may go uncovered, and so may a title line near the start; any other 'greeting' must not hide a claim.
     lead = next((i for i, sid in enumerate(ids) if roles.get(sid) != 'greeting'), len(ids))
-    problems += [f'{sid}: not covered by any claim' for i, sid in enumerate(ids) if i >= lead and sid not in covered]
+    excused = {sid for i, sid in enumerate(ids) if i < lead or (
+        i < TITLE_WINDOW and roles.get(sid) == 'greeting' and title_line(by_id[sid]['text']))}
+    problems += [f'{sid}: not covered by any claim' for sid in ids if sid not in excused and sid not in covered]
     return problems, roles, rows
 
 

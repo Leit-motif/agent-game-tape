@@ -27,7 +27,10 @@ Exit status: 0 accepted, 1 rejected or unverified, 2 usage or input error.
    the selected moments, the experiment and the strength-change taxonomy. It returns a role for each
    sentence and atomic consequential claims, each tied to sentence ids, evidence ids and a label.
 3. **Validation (deterministic).** Sentence ids, evidence ids, labels and taxonomy slugs must exist. Every
-   sentence must be covered by a claim, except greetings before the first other sentence. A `supported` claim must cite evidence.
+   sentence must be covered by a claim, except greetings before the first other sentence and a title or greeting
+   line among the first five sentences (Brief often speaks its title right after the opening quote). That line is
+   recognised from its text, not from the model's role alone: at most 12 words, no digits, and a title or greeting
+   form such as "This is the brief on …" or "Welcome …". A `supported` claim must cite evidence.
    Malformed or incomplete backend output makes the decision `unverified`, never `accepted`.
 4. **Opening (deterministic over roles).** Greetings and pure connective tissue may come first. The first
    other sentence must have role `moment:1`, the first selected decision. Methodology, source-collection,
