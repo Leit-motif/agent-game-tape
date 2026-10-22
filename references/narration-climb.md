@@ -196,3 +196,31 @@ through the new validation reproduced every label and role and changed two decis
 v2 Case A rep 1 and Case C rep 1 had the same uncovered title line but stay `rejected` on their flagged claims.
 The checker-evaluation round had no `unverified` decision, and the change only removes coverage problems, so
 none of its 54 decisions can change. v2 after rescore: 2 of 5 scored episodes accepted (v0: 0/4, v1: 0/4).
+
+### Amended rounds (2026-10-22)
+
+| Round | Ledger | Variant | Case | Outcome | Seconds | Opening | Flagged claims |
+|---|---|---|---|---|---:|---|---|
+| r1 | 19 | v2 focus + “no durations, time, damage or effort saved” | A | harness error: ambiguous kickoff (exit 2), reconciled to one matching artifact, which ended `failed` | — | — | — |
+| r2 | 20 | same as r1 (item 6: a failed generation says nothing) | C | rejected | 106.7 | ok | `strengthened:unmeasured_as_measured`: “you absolutely protected the real data” |
+
+r2 did not repeat v2 Case C's flag (“No rerun occurred.”), but voiced the prevented-damage claim that the added
+sentence names. The episode was not accepted, so the change showed no gain and the study stopped (item 6) at ledger
+n=20, 2 of the 4 amended generations used. The no-durations sentence does not ship. What ships is v2's opening fix
+as the bundled Brief default (item 7), and the per-episode gate in `SKILL.md`.
+
+**Over the whole study (20 kickoffs).** 14 produced audio and were scored. All 6 that did not produce audio were
+ambiguous single-send kickoffs (exit 2). Each was reconciled read-only to exactly one matching artifact, which stayed
+`in_progress` for about two hours and then ended `failed`. None was resent.
+
+| Lineage | Scored | Accepted | Opening ok | Episodes with a factual flag |
+|---|---:|---:|---:|---:|
+| Old Brief focus (v0, v1) | 8 | 0 | 0 | 6 |
+| First-sentence opening (v2, shipped default) | 5 | 2 | 5 | 3 |
+| First-sentence + no-durations sentence (r2) | 1 | 0 | 1 | 1 |
+
+The opening fix is the one clearly helpful change (0 of 8 openings to 6 of 6). The factual flags that remain are
+led by one family: a time saving, prevented damage or an interval voiced as a measured result (6 of the 10 flagged
+episodes; the other 4 strengthened a different claim, such as a proposal voiced as a result). One prompt sentence
+aimed at that family did not stop it in its one scored episode. With the shipped defaults, read the accepted rate as about 2 in 5 with Brief on these fictional cases. That is an anecdote-sized
+estimate, not a rate to promise. The gate, not the renderer, makes delivered audio trustworthy.
