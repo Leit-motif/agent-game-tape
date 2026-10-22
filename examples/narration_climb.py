@@ -87,9 +87,23 @@ def focus_no_overview(review):
     return base.replace(BEGIN, NO_OVERVIEW)
 
 
+# Amended round 1 (r1): on top of v2's opening, one focus sentence aimed at the commonest remaining failure in the
+# main-source lineage (v0, v2): invented time savings, prevented damage and intervals re-voiced as durations.
+CONFIRMED = "keep the distinction between what the assistant reported and what the record confirmed."
+NO_DURATIONS = ('Do not mention durations, elapsed minutes, or any time, damage or effort saved; '
+                'those stay in the written report.')
+
+
+def focus_no_durations(review):
+    base = focus_first_sentence(review)
+    if CONFIRMED not in base:
+        raise ValueError('bundled Brief focus changed; r1 is defined against the frozen sentence')
+    return base.replace(CONFIRMED, f'{CONFIRMED} {NO_DURATIONS}')
+
+
 SOURCES = {'main': lambda b, r: narration(b, r, 'prose'), 'affirmative': narration_affirmative}
 FOCUSES = {'bundled': lambda r: build_focus(r, FORMAT), 'first-sentence': focus_first_sentence,
-           'no-overview': focus_no_overview}
+           'no-overview': focus_no_overview, 'first-sentence-no-durations': focus_no_durations}
 
 
 def prepare(args):

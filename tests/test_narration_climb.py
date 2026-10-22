@@ -18,6 +18,11 @@ class ClimbVariants(unittest.TestCase):
                 head, tail = base.split(climb.BEGIN)
                 self.assertTrue(focus.startswith(head) and focus.endswith(tail), name)
 
+    def test_no_durations_adds_one_sentence_to_the_first_sentence_focus(self):
+        for name, (_, review) in climb.cases().items():
+            v2, r1 = climb.FOCUSES['first-sentence'](review), climb.FOCUSES['first-sentence-no-durations'](review)
+            self.assertEqual(r1.replace(' ' + climb.NO_DURATIONS, ''), v2, name)
+
     def test_affirmative_source_drops_negations_and_intervals(self):
         self.assertEqual(climb.affirmative('It passed. It did not rerun. Eight minutes elapsed.'), 'It passed.')
 
